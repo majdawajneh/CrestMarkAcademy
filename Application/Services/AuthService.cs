@@ -5,6 +5,7 @@ using Domain.Entities.Identity;
 using Domain.Entities.Identity__UserManagement_;
 using Domain.Enums;
 using Microsoft.AspNetCore.Identity;
+using System.Text.Encodings.Web;
 
 namespace Application.Services
 {
@@ -294,41 +295,10 @@ namespace Application.Services
             // Confirmation Email
             // =========================
 
-            var emailBody = $"""
-                <div style="font-family: Arial, sans-serif;">
-                    <h2>Welcome to CrestMark Academy</h2>
-
-                    <p>Hello {user.FirstName},</p>
-
-                    <p>
-                        Thank you for creating your account.
-                    </p>
-
-                    <p>
-                        Please use the following verification token
-                        to confirm your email:
-                    </p>
-
-                    <div style="
-                        padding: 15px;
-                        background-color: #f3f3f3;
-                        margin: 20px 0;
-                        font-size: 18px;
-                        font-weight: bold;
-                        word-break: break-all;
-                    ">
-                        {verificationToken}
-                    </div>
-
-                    <p>
-                        This verification token expires in 24 hours.
-                    </p>
-
-                    <p>
-                        CrestMark Academy
-                    </p>
-                </div>
-                """;
+            var emailBody = BuildConfirmationEmail(
+                user.FirstName,
+                verificationToken
+            );
 
 
             bool emailSent;
@@ -1105,43 +1075,12 @@ namespace Application.Services
             // Email
             // =========================
 
-            var emailBody = $"""
-                <div style="font-family: Arial, sans-serif;">
 
-                    <h2>CrestMark Academy</h2>
+            var emailBody = BuildConfirmationEmail(
+                user.FirstName,
+                verificationToken
+            );
 
-                    <p>Hello {user.FirstName},</p>
-
-                    <p>
-                        We received a request to send you
-                        a new email confirmation token.
-                    </p>
-
-                    <p>
-                        Use the verification token below:
-                    </p>
-
-                    <div style="
-                        padding: 15px;
-                        background-color: #f3f3f3;
-                        margin: 20px 0;
-                        font-size: 18px;
-                        font-weight: bold;
-                        word-break: break-all;
-                    ">
-                        {verificationToken}
-                    </div>
-
-                    <p>
-                        This token expires in 24 hours.
-                    </p>
-
-                    <p>
-                        CrestMark Academy
-                    </p>
-
-                </div>
-                """;
 
 
             await _emailService
@@ -1698,5 +1637,228 @@ namespace Application.Services
                 );
             }
         }
+
+        private static string BuildConfirmationEmail(
+            string firstName,
+            string verificationToken)
+        {
+            var clientUrl = Environment.GetEnvironmentVariable(
+                "CRESTMARK_CLIENT_URL"
+            );
+
+            if (string.IsNullOrWhiteSpace(clientUrl))
+            {
+                clientUrl = "http://localhost:3000";
+            }
+
+            clientUrl = clientUrl.TrimEnd('/');
+
+            if (!Uri.TryCreate(
+                    clientUrl,
+                    UriKind.Absolute,
+                    out var parsedUrl) ||
+                (parsedUrl.Scheme != Uri.UriSchemeHttps &&
+                 !(parsedUrl.Scheme == Uri.UriSchemeHttp &&
+                   parsedUrl.IsLoopback)))
+            {
+                throw new InvalidOperationException(
+                    "Invalid CrestMark client URL configuration."
+                );
+            }
+
+            var verificationLink =
+                $"{clientUrl}/en/verify-email" +
+                $"?token={Uri.EscapeDataString(verificationToken)}";
+
+            var safeLink = HtmlEncoder.Default.Encode(
+                verificationLink
+            );
+
+            var safeName = HtmlEncoder.Default.Encode(
+                firstName
+            );
+
+            return $"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport"
+                  content="width=device-width, initial-scale=1.0">
+            <title>Verify your email</title>
+        </head>
+
+        <body style="
+            margin:0;
+            padding:32px 16px;
+            background-color:#f3f7fc;
+            font-family:Arial,Helvetica,sans-serif;
+            color:#172f50;
+        ">
+
+            <table role="presentation"
+                   cellspacing="0"
+                   cellpadding="0"
+                   border="0"
+                   width="100%"
+                   style="max-width:560px;margin:0 auto;">
+
+                <tr>
+                    <td style="
+                        background-color:#102a52;
+                        padding:25px 32px;
+                        border-radius:12px 12px 0 0;
+                    ">
+                        <span style="
+                            color:#ffffff;
+                            font-size:23px;
+                            font-weight:700;
+                            letter-spacing:-0.5px;
+                        ">
+                            CrestMark
+                        </span>
+
+                        <span style="
+                            display:block;
+                            color:#a9c9ee;
+                            font-size:11px;
+                            margin-top:4px;
+                            letter-spacing:1.5px;
+                        ">
+                            ACADEMY
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="
+                        background-color:#ffffff;
+                        padding:42px 34px;
+                        border:1px solid #e2eaf4;
+                    ">
+
+                        <h1 style="
+                            margin:0 0 20px;
+                            color:#102a52;
+                            font-size:28px;
+                            line-height:1.3;
+                        ">
+                            Verify your email address
+                        </h1>
+
+                        <p style="
+                            margin:0 0 15px;
+                            color:#445c78;
+                            font-size:15px;
+                            line-height:1.8;
+                        ">
+                            Hi {safeName},
+                        </p>
+
+                        <p style="
+                            margin:0;
+                            color:#5b7089;
+                            font-size:15px;
+                            line-height:1.8;
+                        ">
+                            Welcome to CrestMark Academy!
+                            Please confirm your email address
+                            to activate your account and begin
+                            your learning journey.
+                        </p>
+
+                        <table role="presentation"
+                               cellspacing="0"
+                               cellpadding="0"
+                               border="0"
+                               style="margin:32px 0;">
+                            <tr>
+                                <td style="
+                                    background-color:#2563eb;
+                                    border-radius:8px;
+                                ">
+                                    <a href="{safeLink}"
+                                       style="
+                                           display:inline-block;
+                                           padding:16px 28px;
+                                           background-color:#2563eb;
+                                           color:#ffffff;
+                                           font-size:15px;
+                                           font-weight:700;
+                                           text-decoration:none;
+                                           border-radius:8px;
+                                       ">
+                                        Verify Email Address
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p style="
+                            color:#74859b;
+                            font-size:13px;
+                            line-height:1.8;
+                            margin:0 0 18px;
+                        ">
+                            This verification link expires
+                            in 24 hours.
+                        </p>
+
+                        <p style="
+                            color:#74859b;
+                            font-size:13px;
+                            line-height:1.8;
+                            margin:0;
+                        ">
+                            If the button doesn't work,
+                            copy and paste this link
+                            into your browser:
+                        </p>
+
+                        <p style="
+                            font-size:12px;
+                            line-height:1.8;
+                            overflow-wrap:anywhere;
+                            word-break:break-all;
+                        ">
+                            <a href="{safeLink}"
+                               style="color:#2563eb;">
+                                {safeLink}
+                            </a>
+                        </p>
+
+                        <p style="
+                            margin:25px 0 0;
+                            color:#8593a6;
+                            font-size:12px;
+                            line-height:1.7;
+                        ">
+                            If you didn't create this account,
+                            you can safely ignore this email.
+                        </p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="
+                        padding:24px 16px;
+                        text-align:center;
+                        background-color:#edf3fa;
+                        border-radius:0 0 12px 12px;
+                        color:#71839b;
+                        font-size:12px;
+                    ">
+                        CrestMark Academy
+                        <br>
+                        Learn. Build. Advance.
+                    </td>
+                </tr>
+
+            </table>
+        </body>
+        </html>
+        """;
+        }
+
     }
 }

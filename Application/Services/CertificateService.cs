@@ -33,6 +33,9 @@ namespace Application.Services
             IGenericRepository<Notification>
             _notificationRepo;
 
+        private readonly ILessonProgressRepository
+    _lessonProgressRepo;
+
 
         // =========================
         // Constructor
@@ -43,7 +46,8 @@ namespace Application.Services
             IGenericRepository<Enrollment> enrollmentRepo,
             ICertificateRepository certificateDetailsRepo,
             IEnrollmentRepository enrollmentDetailsRepo,
-            IGenericRepository<Notification> notificationRepo)
+            IGenericRepository<Notification> notificationRepo,
+            ILessonProgressRepository lessonProgressRepo)
         {
             _certificateRepo =
                 certificateRepo;
@@ -59,6 +63,9 @@ namespace Application.Services
 
             _notificationRepo =
                 notificationRepo;
+
+            _lessonProgressRepo =
+                lessonProgressRepo;
         }
 
 
@@ -231,6 +238,27 @@ namespace Application.Services
                 );
             }
 
+            // =====================================
+            // Validate Current Course Completion
+            // =====================================
+
+            var totalLessons =
+                await _lessonProgressRepo
+                    .GetPublishedLessonsCountAsync(
+                        enrollment.CourseId);
+
+            var completedLessons =
+                await _lessonProgressRepo
+                    .GetCompletedLessonsCountAsync(
+                        enrollment.Id,
+                        enrollment.CourseId);
+
+            if (totalLessons <= 0 ||
+                completedLessons != totalLessons)
+            {
+                throw new InvalidOperationException(
+                    "All published course lessons must be completed before a certificate can be issued.");
+            }
 
             // =========================
             // Generate Certificate Number

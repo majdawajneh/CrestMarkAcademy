@@ -481,6 +481,14 @@ namespace Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime?>("CheckoutStartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CheckoutStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -490,6 +498,10 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime?>("FailedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("GatewayTransactionReference")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
@@ -509,6 +521,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GatewayTransactionReference")
+                        .IsUnique()
+                        .HasFilter("[GatewayTransactionReference] IS NOT NULL");
 
                     b.HasIndex("OrderId")
                         .IsUnique()
@@ -869,6 +885,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("EnrolledAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("LastAccessedLessonId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()

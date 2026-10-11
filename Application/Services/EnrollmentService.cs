@@ -37,6 +37,8 @@ namespace Application.Services
             IGenericRepository<Course>
             _courseRepo;
 
+        private readonly IGenericRepository<Lesson> _lessonRepo;
+
         private readonly
             IGenericRepository<Notification>
             _notificationRepo;
@@ -51,6 +53,7 @@ namespace Application.Services
             IEnrollmentRepository enrollmentDetailsRepo,
             IGenericRepository<User> userRepo,
             IGenericRepository<Course> courseRepo,
+            IGenericRepository<Lesson> lessonRepo,
             IGenericRepository<Notification> notificationRepo)
         {
             _enrollmentRepo =
@@ -67,6 +70,8 @@ namespace Application.Services
 
             _notificationRepo =
                 notificationRepo;
+
+            _lessonRepo = lessonRepo;
         }
 
 
@@ -505,6 +510,101 @@ namespace Application.Services
                         e.CourseId == courseId &&
                         e.Status == ActiveStatus
                 );
+        }
+
+
+        // ======================================
+        // Get Last Accessed Lesson
+        // ======================================
+
+        public async Task<int?> GetLastAccessedLessonAsync(
+            int userId,
+            int courseId)
+        {
+            var enrollment = await _enrollmentDetailsRepo
+                .GetByUserAndCourseAsync(userId, courseId);
+
+            if (enrollment == null ||
+                !IsAccessibleEnrollment(enrollment.Status))
+            {
+                throw new UnauthorizedAccessException(
+                    "You do not have access to this course.");
+            }
+
+            if (enrollment.LastAccessedLessonId == null)
+            {
+                return null;
+            }
+
+            var lessonId = enrollment.LastAccessedLessonId.Value;
+
+            var lessonExists = await _lessonRepo.ExistsAsync(
+                lesson =>
+                    lesson.Id == lessonId &&
+                    lesson.IsPublished &&
+                    lesson.CourseSection.CourseId == courseId);
+
+            return lessonExists ? lessonId : null;
+        }
+
+        // ======================================
+        // Set Last Accessed Lesson
+        // ======================================
+
+        public async Task SetLastAccessedLessonAsync(
+            int userId,
+            int courseId,
+            int lessonId)
+        {
+            var enrollment = await _enrollmentDetailsRepo
+                .GetByUserAndCourseAsync(userId, courseId);
+
+            if (enrollment == null ||
+                !IsAccessibleEnrollment(enrollment.Status))
+            {
+                throw new UnauthorizedAccessException(
+                    "You do not have access to this course.");
+            }
+
+            var lessonExists = await _lessonRepo.ExistsAsync(
+                lesson =>
+                    lesson.Id == lessonId &&
+                    lesson.IsPublished &&
+                    lesson.CourseSection.CourseId == courseId);
+
+            if (!lessonExists)
+            {
+                throw new KeyNotFoundException(
+                    "The lesson was not found in this course.");
+            }
+
+            if (enrollment.LastAccessedLessonId == lessonId)
+            {
+                return;
+            }
+
+            enrollment.LastAccessedLessonId = lessonId;
+
+            _enrollmentRepo.Update(enrollment);
+
+            await _enrollmentRepo.SaveChangesAsync();
+        }
+
+        // ======================================
+        // Enrollment Access Validation
+        // ======================================
+
+        private static bool IsAccessibleEnrollment(string status)
+        {
+            return string.Equals(
+                       status,
+                       ActiveStatus,
+                       StringComparison.OrdinalIgnoreCase)
+                   ||
+                   string.Equals(
+                       status,
+                       CompletedStatus,
+                       StringComparison.OrdinalIgnoreCase);
         }
 
 

@@ -1,4 +1,6 @@
 ﻿using Application.Dto_s.Course;
+using Application.Dto_s.CourseLearningOutcome;
+using Application.Dto_s.CourseRequirement;
 using Application.Repositories.Interfaces;
 using Application.Services.Interfaces;
 using Domain.Entities.Catalog;
@@ -770,81 +772,85 @@ namespace Application.Services
         // Map Course -> CourseDto
         // =========================
 
-        private static CourseDto
-            MapToDto(Course course)
+
+        private static CourseDto MapToDto(Course course)
         {
             return new CourseDto
             {
-                Id =
-                    course.Id,
+                Id = course.Id,
 
-                CategoryId =
-                    course.CategoryId,
+                CategoryId = course.CategoryId,
 
-                CategoryName =
-                    course.Category?.Name
+                CategoryName = course.Category?.Name
                     ?? string.Empty,
 
-                InstructorId =
-                    course.InstructorId,
+                InstructorId = course.InstructorId,
 
-                InstructorName =
-                    GetInstructorName(
-                        course.Instructor
-                    ),
+                InstructorName = GetInstructorName(
+                    course.Instructor
+                ),
 
-                Title =
-                    course.Title,
+                Title = course.Title,
 
-                Slug =
-                    course.Slug,
+                Slug = course.Slug,
 
-                ShortDescription =
-                    course.ShortDescription,
+                ShortDescription = course.ShortDescription,
 
-                Description =
-                    course.Description,
+                Description = course.Description,
 
-                ThumbnailUrl =
-                    course.ThumbnailUrl,
+                ThumbnailUrl = course.ThumbnailUrl,
 
-                PreviewVideoUrl =
-                    course.PreviewVideoUrl,
+                PreviewVideoUrl = course.PreviewVideoUrl,
 
-                Price =
-                    course.Price,
+                Price = course.Price,
 
-                DiscountPrice =
-                    course.DiscountPrice,
+                DiscountPrice = course.DiscountPrice,
 
-                Language =
-                    course.Language,
+                Language = course.Language,
 
-                Level =
-                    course.Level,
+                Level = course.Level,
 
-                Status =
-                    course.Status,
+                Status = course.Status,
 
-                IsFeatured =
-                    course.IsFeatured,
+                IsFeatured = course.IsFeatured,
 
-                HasCertificate =
-                    course.HasCertificate,
+                HasCertificate = course.HasCertificate,
 
                 EstimatedDurationHours =
                     course.EstimatedDurationHours,
 
-                CreatedAt =
-                    course.CreatedAt,
+                CreatedAt = course.CreatedAt,
 
-                UpdatedAt =
-                    course.UpdatedAt,
+                UpdatedAt = course.UpdatedAt,
 
-                PublishedAt =
-                    course.PublishedAt
+                PublishedAt = course.PublishedAt,
+
+                // Course Requirements
+                Requirements = course.Requirements
+                    .OrderBy(r => r.OrderIndex)
+                    .Select(r => new CourseRequirementDto
+                    {
+                        Id = r.Id,
+                        CourseId = r.CourseId,
+                        Requirement = r.Requirement,
+                        OrderIndex = r.OrderIndex
+                    })
+                    .ToList(),
+
+                // Course Learning Outcomes
+                LearningOutcomes = course.LearningOutcomes
+                    .OrderBy(o => o.OrderIndex)
+                    .Select(o => new CourseLearningOutcomeDto
+                    {
+                        Id = o.Id,
+                        CourseId = o.CourseId,
+                        Outcome = o.Outcome,
+                        OrderIndex = o.OrderIndex
+                    })
+                    .ToList()
             };
         }
+
 
 
         // =========================

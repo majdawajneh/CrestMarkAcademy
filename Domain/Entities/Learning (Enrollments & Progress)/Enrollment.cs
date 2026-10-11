@@ -14,6 +14,7 @@ namespace Domain.Entities.Learning
         public DateTime EnrolledAt { get; set; } = DateTime.UtcNow;
         public DateTime? CompletedAt { get; set; }
         public string Status { get; set; } = "Active";
+        public int? LastAccessedLessonId { get; set; }
 
 
         // Navigation Properties

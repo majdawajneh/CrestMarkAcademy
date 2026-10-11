@@ -1,6 +1,8 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Text;
+using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Entities.Commerce
 {
@@ -12,6 +14,18 @@ namespace Domain.Entities.Commerce
 
         public string PaymentProvider { get; set; } = string.Empty;
 
+        // PayTabs transaction reference created
+        // when the checkout session starts.
+        [MaxLength(128)]
+        public string? GatewayTransactionReference { get; set; }
+
+        [MaxLength(32)]
+        public string CheckoutStatus { get; set; } = "NotStarted";
+
+        public DateTime? CheckoutStartedAt { get; set; }
+
+        // Confirmed transaction reference
+        // after successful payment.
         public string? TransactionId { get; set; }
 
         public decimal Amount { get; set; }
@@ -26,9 +40,7 @@ namespace Domain.Entities.Commerce
 
         public DateTime? FailedAt { get; set; }
 
-
         // Navigation Property
-
         public Order Order { get; set; } = null!;
     }
 }

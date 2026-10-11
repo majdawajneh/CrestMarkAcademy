@@ -1,6 +1,7 @@
 using Application.Repositories.Interfaces;
 using Application.Services;
 using Application.Services.Interfaces;
+using CrestMarkAcademy;
 using CrestMarkAcademy.Exceptions;
 using Domain.Entities.Identity;
 using Infrastructure.Context;
@@ -196,6 +197,12 @@ builder.Services.AddScoped<
     IPaymentService,
     PaymentService
 >();
+
+builder.Services.AddHttpClient<PayTabsService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 
 builder.Services.AddScoped<
     IWishlistService,

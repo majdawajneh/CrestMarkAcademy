@@ -1,0 +1,470 @@
+
+/* ==========================================
+   CrestMark — Homepage Hero
+========================================== */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    115deg,
+    #ffffff 0%,
+    #ffffff 48%,
+    #f1f7ff 100%
+  );
+}
+
+.heroContainer {
+  width: min(
+    calc(100% - 64px),
+    1320px
+  );
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.94fr);
+  align-items: center;
+  column-gap: clamp(50px, 6vw, 110px);
+  padding-block: 94px 100px;
+}
+
+/* ==========================================
+   Hero Content
+========================================== */
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 650px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 26px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.eyebrowLine {
+  width: 30px;
+  height: 2px;
+  background: #2563eb;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  color: #102a52;
+  font-size: clamp(45px, 4.7vw, 72px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.055em;
+}
+
+.headingHighlight {
+  color: #2563eb;
+}
+
+.description {
+  max-width: 540px;
+  margin-top: 28px;
+  color: #536781;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.9;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 36px;
+}
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 17px;
+  min-height: 54px;
+  padding: 0 26px;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 9px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.primaryButton:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  transform: translateY(-2px);
+}
+
+.primaryButton svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 54px;
+  padding: 0 12px;
+  color: #102a52;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  transition: color 0.2s ease;
+}
+
+.secondaryButton:hover {
+  color: #2563eb;
+}
+
+.secondaryButton svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ==========================================
+   Hero Visual
+========================================== */
+
+.visual {
+  position: relative;
+  min-width: 0;
+  height: 520px;
+  border-radius: 18px;
+}
+
+.heroImage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background-color: #dce8f4;
+  background-image:
+    linear-gradient(
+      to bottom,
+      transparent 45%,
+      rgba(7, 26, 52, 0.25) 100%
+    ),
+    url("https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1400&q=85");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.imageInfo {
+  position: absolute;
+  z-index: 2;
+  inset-inline-start: -44px;
+  bottom: 34px;
+  width: min(345px, 87%);
+  padding: 26px 28px;
+  background: #ffffff;
+  border: 1px solid #e5edf6;
+  border-radius: 12px;
+  box-shadow: 0 18px 55px rgba(14, 41, 78, 0.11);
+}
+
+.imageLabel {
+  display: block;
+  margin-bottom: 12px;
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.imageTitle {
+  margin: 0;
+  color: #102a52;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.025em;
+}
+
+.imageDescription {
+  margin-top: 10px;
+  color: #63758e;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.imageDecoration {
+  display: flex;
+  gap: 5px;
+  margin-top: 22px;
+}
+
+.imageDecoration span {
+  width: 22px;
+  height: 3px;
+  background: #2563eb;
+  border-radius: 3px;
+}
+
+.imageDecoration span:nth-child(2) {
+  width: 12px;
+  background: #97baf2;
+}
+
+.imageDecoration span:nth-child(3) {
+  width: 7px;
+  background: #d1e2fa;
+}
+
+/* ==========================================
+   Explore Categories
+========================================== */
+
+.heroBottom {
+  border-top: 1px solid #e8eff8;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.bottomInner {
+  width: min(
+    calc(100% - 64px),
+    1320px
+  );
+  min-height: 102px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.bottomLabel {
+  color: #72829a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.categoryLinks {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: clamp(20px, 3vw, 45px);
+}
+
+.categoryLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #284463;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.categoryLink:hover {
+  color: #2563eb;
+}
+
+.categoryLink svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ==========================================
+   Arabic / RTL
+========================================== */
+
+:global(html[dir="rtl"]) .eyebrow,
+:global(html[dir="rtl"]) .imageLabel,
+:global(html[dir="rtl"]) .bottomLabel {
+  letter-spacing: 0;
+}
+
+:global(html[dir="rtl"]) .heading {
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+:global(html[dir="rtl"]) .primaryButton svg,
+:global(html[dir="rtl"]) .secondaryButton svg,
+:global(html[dir="rtl"]) .categoryLink svg {
+  transform: scaleX(-1);
+}
+
+/* ==========================================
+   Responsive
+========================================== */
+
+@media (max-width: 1200px) {
+  .heroContainer {
+    column-gap: 54px;
+  }
+
+  .heading {
+    font-size: clamp(42px, 4.5vw, 62px);
+  }
+
+  .visual {
+    height: 460px;
+  }
+
+  .imageInfo {
+    inset-inline-start: -25px;
+  }
+
+  .bottomInner {
+    gap: 22px;
+  }
+}
+
+@media (max-width: 900px) {
+  .heroContainer {
+    grid-template-columns: 1fr;
+    row-gap: 54px;
+    padding-block: 76px 68px;
+  }
+
+  .heroContent {
+    max-width: 720px;
+  }
+
+  .heading {
+    font-size: clamp(44px, 6vw, 66px);
+  }
+
+  .visual {
+    width: min(100%, 700px);
+    height: 440px;
+  }
+
+  .imageInfo {
+    inset-inline-start: 24px;
+    bottom: 24px;
+  }
+
+  .bottomInner {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    padding-block: 26px;
+  }
+}
+
+@media (max-width: 600px) {
+  .heroContainer,
+  .bottomInner {
+    width: calc(100% - 36px);
+  }
+
+  .heroContainer {
+    row-gap: 40px;
+    padding-block: 54px 50px;
+  }
+
+  .eyebrow {
+    margin-bottom: 20px;
+    font-size: 10px;
+  }
+
+  .heading {
+    gap: 6px;
+    font-size: clamp(37px, 9vw, 48px);
+  }
+
+  .description {
+    margin-top: 20px;
+    font-size: 15px;
+    line-height: 1.85;
+  }
+
+  .heroActions {
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 28px;
+  }
+
+  .primaryButton {
+    min-height: 50px;
+    padding-inline: 20px;
+  }
+
+  .secondaryButton {
+    min-height: 50px;
+    padding-inline: 8px;
+  }
+
+  .visual {
+    height: 370px;
+  }
+
+  .heroImage {
+    border-radius: 12px;
+  }
+
+  .imageInfo {
+    inset-inline-start: 14px;
+    inset-inline-end: 14px;
+    bottom: 14px;
+    width: auto;
+    padding: 20px;
+  }
+
+  .imageTitle {
+    font-size: 20px;
+  }
+
+  .imageDescription {
+    font-size: 12px;
+  }
+
+  .categoryLinks {
+    column-gap: 22px;
+    row-gap: 16px;
+  }
+
+  .categoryLink {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryButton,
+  .secondaryButton,
+  .categoryLink {
+    transition: none;
+  }
+}

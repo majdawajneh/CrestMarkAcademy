@@ -803,6 +803,21 @@ namespace Infrastructure.Context
 
 
             // =========================
+            // Gateway Transaction Reference Unique
+            // =========================
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(
+                    p => p.GatewayTransactionReference
+                )
+                .IsUnique()
+                .HasFilter(
+                    "[GatewayTransactionReference] IS NOT NULL"
+                );
+
+
+
+            // =========================
             // TransactionId Unique
             // =========================
 

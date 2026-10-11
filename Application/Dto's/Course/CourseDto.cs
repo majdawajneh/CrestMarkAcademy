@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Application.Dto_s.CourseLearningOutcome;
+using Application.Dto_s.CourseRequirement;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -59,5 +61,11 @@ namespace Application.Dto_s.Course
         public DateTime? UpdatedAt { get; set; }
 
         public DateTime? PublishedAt { get; set; }
+
+        // Course Requirements
+        public List<CourseRequirementDto> Requirements { get; set; } = new();
+
+        // Course Learning Outcomes
+        public List<CourseLearningOutcomeDto> LearningOutcomes { get; set; } = new();
     }
 }

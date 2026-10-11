@@ -333,18 +333,27 @@ namespace Application.Services
                 // Idempotent Paid
                 // =========================
 
+
                 if (string.Equals(
                         payment.Status,
                         "Paid",
                         StringComparison.OrdinalIgnoreCase))
                 {
+                    if (!string.Equals(
+                            payment.TransactionId,
+                            transactionId,
+                            StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException(
+                            "Payment was already completed with a different transaction."
+                        );
+                    }
+
                     transactionScope.Complete();
 
-
-                    return MapToDto(
-                        payment
-                    );
+                    return MapToDto(payment);
                 }
+
 
 
                 // =========================
@@ -408,28 +417,15 @@ namespace Application.Services
                 // Coupon Validation
                 // =========================
 
+
                 if (order.Coupon != null)
                 {
-                    if (!order.Coupon.IsActive)
-                    {
-                        throw new InvalidOperationException(
-                            "The coupon used by this order is no longer active."
-                        );
-                    }
-
-
-                    if (order.Coupon.UsageLimit.HasValue &&
-                        order.Coupon.UsedCount >=
-                        order.Coupon.UsageLimit.Value)
-                    {
-                        throw new InvalidOperationException(
-                            "Coupon usage limit has been reached."
-                        );
-                    }
-
+                    // The discount was already calculated
+                    // when the order was created.
+                    // Do not reject a successful payment
+                    // if the coupon expires afterward.
 
                     order.Coupon.UsedCount++;
-
 
                     _couponRepo.Update(
                         order.Coupon
