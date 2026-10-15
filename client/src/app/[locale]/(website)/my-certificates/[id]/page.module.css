@@ -1,0 +1,548 @@
+
+.page {
+  min-height: 100vh;
+  padding: 42px 24px 90px;
+  background: #f7faff;
+  color: #102e50;
+}
+
+.container {
+  width: min(100%, 1160px);
+  margin-inline: auto;
+}
+
+/* Navigation */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 11px;
+  margin-bottom: 38px;
+  color: #8192a8;
+  font-size: 12px;
+}
+
+.breadcrumb a {
+  color: #58718d;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: #155c9d;
+}
+
+/* Page heading */
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 34px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 12px;
+  color: #2877b7;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.pageHeader h1 {
+  margin: 0 0 8px;
+  color: #102e50;
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.pageHeader p {
+  margin: 0;
+  color: #72849a;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.backLink {
+  flex-shrink: 0;
+  color: #1b649c;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+/* Certificate presentation */
+
+.certificateStage {
+  padding: 26px;
+  border: 1px solid #dce7f2;
+  border-radius: 18px;
+  background: #edf3f9;
+  overflow-x: auto;
+}
+
+.certificate {
+  position: relative;
+  width: 100%;
+  min-width: 900px;
+  aspect-ratio: 297 / 210;
+  overflow: hidden;
+
+  background: #fffdfa;
+  color: #17395e;
+
+  border: 3px solid #183c63;
+  box-shadow: 0 18px 48px rgba(19, 48, 79, 0.11);
+
+  box-sizing: border-box;
+}
+
+.innerFrame {
+  position: absolute;
+  inset: 10px;
+
+  display: flex;
+  flex-direction: column;
+
+  min-height: 0;
+  padding: 22px 32px;
+
+  border: 1px solid #bc9b60;
+  box-sizing: border-box;
+}
+
+/* Logo and certificate header */
+
+.certificateHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+
+  flex: 0 0 104px;
+  min-height: 0;
+}
+
+.brandLogoWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 315px;
+  height: 96px;
+  max-width: 50%;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.brandLogo,
+.brandLogoImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+
+  /* تكبير الشعار دون التأثير على حجم الشهادة */
+  transform: scale(1.0);
+  transform-origin: left center;
+}
+
+.seal {
+  width: 73px;
+  height: 73px;
+  flex-shrink: 0;
+  color: #b49457;
+}
+
+/* Central certificate content */
+
+.certificateBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 0;
+  padding: 10px 20px 14px;
+  text-align: center;
+}
+
+.documentType {
+  margin: 0 0 12px;
+
+  color: #ad8951;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.5;
+  letter-spacing: 0.2em;
+}
+
+.certificateBody h2 {
+  margin: 0;
+
+  color: #17395e;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(31px, 3.5vw, 46px);
+  font-weight: 400;
+  line-height: 1.16;
+  letter-spacing: -0.02em;
+}
+
+.goldRule {
+  width: 70px;
+  height: 2px;
+  flex-shrink: 0;
+  margin: 17px 0;
+  background: #b59459;
+}
+
+.presentedText,
+.completedText {
+  margin: 0;
+  color: #78879a;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.12em;
+}
+
+.studentName {
+  max-width: 100%;
+  margin: 12px 0;
+
+  color: #12365d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 4.3vw, 55px);
+  font-weight: 400;
+  line-height: 1.15;
+
+  overflow-wrap: anywhere;
+}
+
+.nameRule {
+  width: min(62%, 390px);
+  height: 1px;
+  flex-shrink: 0;
+  margin-bottom: 19px;
+  background: #d8c49f;
+}
+
+.courseTitle {
+  max-width: 88%;
+  margin: 12px 0 0;
+
+  color: #17395e;
+  font-size: clamp(15px, 1.8vw, 23px);
+  font-weight: 800;
+  line-height: 1.35;
+
+  overflow-wrap: anywhere;
+}
+
+.achievementNote {
+  margin: 16px 0 0;
+
+  color: #ae8b52;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: 0.16em;
+}
+
+/* Bottom information */
+
+.certificateFooter {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  align-items: center;
+  gap: 18px;
+
+  flex: 0 0 64px;
+  min-height: 0;
+
+  padding-top: 13px;
+  border-top: 1px solid #e0d2b9;
+}
+
+.footerColumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  text-align: center;
+}
+
+.footerColumn:first-child {
+  text-align: left;
+}
+
+.footerColumn:last-child {
+  text-align: right;
+}
+
+.footerColumn span {
+  color: #7b8797;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0.09em;
+}
+
+.footerColumn strong {
+  color: #193b60;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.certificateId {
+  font-variant-numeric: tabular-nums;
+}
+
+.documentFooter {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 15px;
+
+  flex: 0 0 25px;
+  min-height: 0;
+
+  color: #9da4ac;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+}
+
+/* Verification information */
+
+.verificationPanel {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  margin-top: 22px;
+  padding: 19px 22px;
+
+  border: 1px solid #dbe8f4;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.verificationIcon {
+  display: grid;
+  place-items: center;
+
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+
+  border-radius: 10px;
+  background: #edf6fc;
+  color: #2376b5;
+}
+
+.verificationIcon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.verificationPanel strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #173b60;
+  font-size: 14px;
+}
+
+.verificationPanel p {
+  margin: 0;
+  color: #78899c;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* Actions */
+
+.actionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 12px 19px;
+
+  border: 1px solid #cbddeb;
+  border-radius: 9px;
+  background: #fff;
+
+  color: #1b527e;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.secondaryButton:hover {
+  border-color: #8db9da;
+}
+
+.downloadPending {
+  color: #8797a8;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 12px 19px;
+  border: 0;
+  border-radius: 9px;
+
+  background: #153e68;
+  color: #fff;
+
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Loading and error states */
+
+.statePanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+
+  min-height: 330px;
+  padding: 35px;
+
+  border: 1px solid #dae5f1;
+  border-radius: 15px;
+  background: #fff;
+  text-align: center;
+}
+
+.statePanel h2 {
+  margin: 0;
+  color: #17395e;
+  font-size: 21px;
+}
+
+.statePanel p {
+  margin: 0;
+  color: #72849a;
+  font-size: 14px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #d8e6f3;
+  border-top-color: #267abc;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+
+@media (max-width: 1000px) {
+  .certificateStage {
+    padding: 16px;
+  }
+
+  .certificate {
+    min-width: 900px;
+  }
+
+  .certificateBody h2 {
+    font-size: 39px;
+  }
+
+  .studentName {
+    font-size: 47px;
+  }
+
+  .courseTitle {
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 25px 16px 70px;
+  }
+
+  .breadcrumb {
+    margin-bottom: 28px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 25px;
+  }
+
+  .pageHeader h1 {
+    font-size: 34px;
+  }
+
+  .certificateStage {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .verificationPanel {
+    padding: 16px;
+  }
+
+  .actionBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .secondaryButton {
+    width: 100%;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

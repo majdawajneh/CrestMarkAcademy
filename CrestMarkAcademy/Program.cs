@@ -14,6 +14,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Security.Claims;
 using System.Text;
+using QuestPDF.Infrastructure;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -197,6 +200,11 @@ builder.Services.AddScoped<
     IPaymentService,
     PaymentService
 >();
+
+builder.Services.AddScoped<
+    ICertificatePdfService,
+    CertificatePdfService>();
+
 
 builder.Services.AddHttpClient<PayTabsService>(client =>
 {
@@ -462,6 +470,33 @@ builder.Services.AddSwaggerGen(
 );
 
 
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode =
+        StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("certificate-verification", context =>
+    {
+        var clientIp =
+            context.Connection.RemoteIpAddress?
+                .MapToIPv4()
+                .ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: clientIp,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }
+        );
+    });
+});
+
+
 var app =
     builder.Build();
 
@@ -527,7 +562,7 @@ else
 
 app.UseHttpsRedirection();
 
-
+app.UseRateLimiter();
 // Authentication MUST come
 // before Authorization.
 
@@ -538,5 +573,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+QuestPDF.Settings.License = LicenseType.Community;
 
 app.Run();

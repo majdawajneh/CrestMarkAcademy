@@ -50,5 +50,9 @@ namespace Application.Services.Interfaces
             int courseId,
             int lessonId
         );
+
+        Task<List<EnrollmentDto>> GetAllForAdminAsync();
+
+        Task<List<EnrollmentDto>> GetByUserIdForAdminAsync(int userId);
     }
 }

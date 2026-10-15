@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { Manrope, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { notFound } from "next/navigation";
 import "../globals.css";
-import Navbar from "@/components/Navbar";
-import { Suspense } from "react";
+
 
 const locales = ["en", "ar"] as const;
 
@@ -107,18 +106,15 @@ export default async function LocaleLayout({
     notFound();
   }
 
+  
   return (
     <html
       lang={locale}
       dir={locale === "ar" ? "rtl" : "ltr"}
       className={`${manrope.variable} ${arabicFont.variable}`}
     >
-      <body>
-        <Suspense fallback={null}>
-          <Navbar />
-        </Suspense>
-        {children}
-        </body>
+      <body>{children}</body>
     </html>
   );
+
 }

@@ -96,6 +96,39 @@ namespace Application.Services
         }
 
 
+
+        // =====================================
+        // Get Current Student Certificate
+        // =====================================
+
+        public async Task<CertificateDetailsDto?>
+            GetMyCertificateByIdAsync(
+                int userId,
+                int certificateId)
+        {
+            if (userId <= 0 || certificateId <= 0)
+            {
+                return null;
+            }
+
+            var certificate = await _certificateDetailsRepo
+                .GetByIdWithDetailsAsync(certificateId);
+
+            if (certificate == null)
+            {
+                return null;
+            }
+
+            // Never expose another student's certificate.
+            if (certificate.Enrollment.UserId != userId)
+            {
+                return null;
+            }
+
+            return MapToDetailsDto(certificate);
+        }
+
+
         // =========================
         // Get Certificate
         // By Certificate Number

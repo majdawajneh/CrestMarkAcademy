@@ -4,7 +4,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   getCurrentSession,
   type SessionUser,
@@ -24,6 +24,7 @@ const translations = {
     categories: "Categories",
     about: "About Us",
     contact: "Contact",
+    verifyCertificate: "Verify Certificate",
     search: "Search courses",
     login: "Log in",
     signup: "Sign Up",
@@ -46,6 +47,7 @@ const translations = {
     categories: "التصنيفات",
     about: "من نحن",
     contact: "تواصل معنا",
+    verifyCertificate: "التحقق من الشهادات",
     search: "البحث عن دورات",
     login: "تسجيل الدخول",
     signup: "إنشاء حساب",
@@ -64,11 +66,42 @@ const translations = {
   },
 } as const;
 
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="10.8" cy="10.8" r="6.8" />
+      <path d="m16 16 5 5" />
+    </svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c3 3 4.5 6 4.5 9S15 18 12 21M12 3c-3 3-4.5 6-4.5 9S9 18 12 21" />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const accountRef = useRef<HTMLDivElement>(null);
 
-  const locale = pathname.startsWith("/ar") ? "ar" : "en";
+  const locale =
+    pathname === "/ar" || pathname.startsWith("/ar/")
+      ? "ar"
+      : "en";
+
   const t = translations[locale];
 
   const [user, setUser] = useState<SessionUser | null>(null);
@@ -81,28 +114,32 @@ export default function Navbar() {
   const [logoutError, setLogoutError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
 
-  // Restore the session on page navigation and retries.
+  // Restore existing authentication session.
   useEffect(() => {
     let cancelled = false;
 
     async function restoreSession() {
-      const result = await getCurrentSession();
+      try {
+        const result = await getCurrentSession();
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (result.status === "authenticated") {
-        setUser(result.user);
-        setSession("authenticated");
-        return;
+        if (result.status === "authenticated") {
+          setUser(result.user);
+          setSession("authenticated");
+          return;
+        }
+
+        if (result.status === "unavailable") {
+          setSession("unavailable");
+          return;
+        }
+
+        setUser(null);
+        setSession("guest");
+      } catch {
+        if (!cancelled) setSession("unavailable");
       }
-
-      if (result.status === "unavailable") {
-        setSession("unavailable");
-        return;
-      }
-
-      setUser(null);
-      setSession("guest");
     }
 
     void restoreSession();
@@ -112,33 +149,75 @@ export default function Navbar() {
     };
   }, [pathname, retryCount]);
 
+  // Close the account menu on Escape or outside click.
+  useEffect(() => {
+    if (!accountOpen && !menuOpen) return;
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setAccountOpen(false);
+        setMenuOpen(false);
+      }
+    }
+
+    function handleOutsideClick(event: PointerEvent) {
+      if (
+        accountOpen &&
+        accountRef.current &&
+        !accountRef.current.contains(event.target as Node)
+      ) {
+        setAccountOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("pointerdown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("pointerdown", handleOutsideClick);
+    };
+  }, [accountOpen, menuOpen]);
+
   const isAdmin =
-    user?.roles.some(
-      (role) => role.toLowerCase() === "admin"
-    ) ?? false;
+    user?.roles.some((role) => role.toLowerCase() === "admin") ??
+    false;
 
   const isStudent =
-    user?.roles.some(
-      (role) => role.toLowerCase() === "student"
-    ) ?? false;
+    user?.roles.some((role) => role.toLowerCase() === "student") ??
+    false;
 
   const navLinks = [
     { label: t.home, href: `/${locale}` },
     { label: t.courses, href: `/${locale}/courses` },
-    {
-      label: t.categories,
-      href: `/${locale}/categories`,
-    },
+    { label: t.categories, href: `/${locale}/categories` },
     { label: t.about, href: `/${locale}/about` },
+    {
+      label: t.verifyCertificate,
+      href: `/${locale}/verify-certificate`,
+    },
     { label: t.contact, href: `/${locale}/contact` },
+  ];
+
+  const accountLinks = [
+    ...(isAdmin
+      ? [{ label: t.dashboard, href: `/${locale}/admin` }]
+      : []),
+    ...(isStudent
+      ? [{ label: t.myLearning, href: `/${locale}/my-learning` }]
+      : []),
+    { label: t.profile, href: `/${locale}/profile` },
   ];
 
   const otherLocale = locale === "en" ? "ar" : "en";
 
-  const localizedPath = pathname.replace(
-    /^\/(en|ar)(?=\/|$)/,
-    `/${otherLocale}`
-  );
+  const localizedPath =
+    pathname.replace(
+      /^\/(en|ar)(?=\/|$)/,
+      `/${otherLocale}`
+    ) || `/${otherLocale}`;
+
+  const displayName = user?.username || "";
 
   function closeMenus() {
     setMenuOpen(false);
@@ -189,53 +268,32 @@ export default function Navbar() {
     }
   }
 
-  const accountLinks = [
-    ...(isAdmin
-      ? [
-          {
-            label: t.dashboard,
-            href: `/${locale}/admin`,
-          },
-        ]
-      : []),
-    ...(isStudent
-      ? [
-          {
-            label: t.myLearning,
-            href: `/${locale}/my-learning`,
-          },
-        ]
-      : []),
-    {
-      label: t.profile,
-      href: `/${locale}/profile`,
-    },
-  ];
-
-  const displayName = user?.username || "";
-
   return (
     <header className={styles.header}>
       <div className={styles.container}>
-        <Link
-          href={`/${locale}`}
-          className={styles.brand}
-          aria-label="CrestMark Academy"
-          onClick={closeMenus}
-        >
-          <Image
-            src="/crestmark-logo.png"
-            alt="CrestMark"
-            width={172}
-            height={54}
-            priority
-            className={styles.logo}
-          />
-        </Link>
+        
+          {/* Brand */}
+          <Link
+            href={`/${locale}`}
+            className={styles.brand}
+            aria-label="CrestMark Academy"
+            onClick={closeMenus}
+          >
+            <Image
+              src="/crestmark-logo.png"
+              alt="CrestMark Academy"
+              width={2048}
+              height={677}
+              priority
+              className={styles.navbarLogo}
+            />
+          </Link>
 
+
+        {/* Desktop navigation */}
         <nav
           className={styles.desktopNav}
-          aria-label="Main navigation"
+          aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main navigation"}
         >
           {navLinks.map((link) => (
             <Link
@@ -247,27 +305,23 @@ export default function Navbar() {
               aria-current={
                 pathname === link.href ? "page" : undefined
               }
+              onClick={closeMenus}
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
+        {/* Search, language and account */}
         <div className={styles.actions}>
           <Link
             href={`/${locale}/courses`}
             className={styles.searchAction}
             aria-label={t.search}
+            title={t.search}
             onClick={closeMenus}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-            >
-              <circle cx="10.8" cy="10.8" r="6.8" />
-              <path d="m16 16 5 5" />
-            </svg>
+            <SearchIcon />
           </Link>
 
           <Link
@@ -275,16 +329,10 @@ export default function Navbar() {
             hrefLang={otherLocale}
             className={styles.languageButton}
             aria-label={t.language}
+            title={t.language}
             onClick={closeMenus}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="9" />
-              <path d="M3 12h18M12 3c3 3 4.5 6 4.5 9S15 18 12 21M12 3c-3 3-4.5 6-4.5 9S9 18 12 21" />
-            </svg>
+            <GlobeIcon />
             <span>{otherLocale.toUpperCase()}</span>
           </Link>
 
@@ -296,24 +344,22 @@ export default function Navbar() {
           ) : session === "unavailable" ? (
             <button
               type="button"
-              className={styles.login}
+              className={styles.retryButton}
               onClick={retrySession}
-              title={t.retry}
-              aria-label={`${t.sessionUnavailable}. ${t.retry}`}
+              title={t.sessionUnavailable}
             >
               {t.retry}
             </button>
           ) : session === "authenticated" && user ? (
-            <div className={styles.accountArea}>
+            <div className={styles.accountArea} ref={accountRef}>
               <button
                 type="button"
                 className={styles.accountButton}
                 aria-label={t.account}
+                aria-haspopup="menu"
                 aria-expanded={accountOpen}
                 aria-controls={
-                  accountOpen
-                    ? "cm-account-dropdown"
-                    : undefined
+                  accountOpen ? "cm-account-dropdown" : undefined
                 }
                 onClick={() => {
                   setAccountOpen((value) => !value);
@@ -328,13 +374,7 @@ export default function Navbar() {
                   {displayName}
                 </span>
 
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
+                <ChevronIcon />
               </button>
 
               {accountOpen && (
@@ -351,8 +391,8 @@ export default function Navbar() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      onClick={closeMenus}
                       className={styles.dropdownLink}
+                      onClick={closeMenus}
                     >
                       {link.label}
                     </Link>
@@ -364,15 +404,13 @@ export default function Navbar() {
                     onClick={handleLogout}
                     disabled={loggingOut}
                   >
-                    {loggingOut
-                      ? t.loggingOut
-                      : t.logout}
+                    {loggingOut ? t.loggingOut : t.logout}
                   </button>
 
                   {logoutError && (
                     <p
-                      role="alert"
                       className={styles.logoutError}
+                      role="alert"
                     >
                       {logoutError}
                     </p>
@@ -385,6 +423,7 @@ export default function Navbar() {
               <Link
                 href={`/${locale}/login`}
                 className={styles.login}
+                onClick={closeMenus}
               >
                 {t.login}
               </Link>
@@ -392,12 +431,14 @@ export default function Navbar() {
               <Link
                 href={`/${locale}/register`}
                 className={styles.signup}
+                onClick={closeMenus}
               >
                 {t.signup}
               </Link>
             </div>
           )}
 
+          {/* Mobile menu toggle */}
           <button
             type="button"
             className={styles.menuToggle}
@@ -412,11 +453,11 @@ export default function Navbar() {
             }}
           >
             {menuOpen ? (
-              <svg viewBox="0 0 24 24" fill="none">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M5 5 19 19M19 5 5 19" />
               </svg>
             ) : (
-              <svg viewBox="0 0 24 24" fill="none">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             )}
@@ -424,11 +465,14 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Mobile navigation */}
       {menuOpen && (
         <nav
           id="crestmark-mobile-nav"
           className={styles.mobileNav}
-          aria-label="Mobile navigation"
+          aria-label={
+            locale === "ar" ? "قائمة الجوال" : "Mobile navigation"
+          }
         >
           {navLinks.map((link) => (
             <Link
@@ -436,12 +480,14 @@ export default function Navbar() {
               href={link.href}
               onClick={closeMenus}
               className={`${styles.mobileLink} ${
-                isActive(link.href)
-                  ? styles.mobileActive
-                  : ""
+                isActive(link.href) ? styles.mobileActive : ""
               }`}
+              aria-current={
+                pathname === link.href ? "page" : undefined
+              }
             >
               {link.label}
+              <span aria-hidden="true">↗</span>
             </Link>
           ))}
 
@@ -451,7 +497,11 @@ export default function Navbar() {
                 <span className={styles.avatar}>
                   {displayName.charAt(0).toUpperCase()}
                 </span>
-                <span>{displayName}</span>
+
+                <div className={styles.mobileUserDetails}>
+                  <strong>{displayName}</strong>
+                  <span>{user.email}</span>
+                </div>
               </div>
 
               {accountLinks.map((link) => (
@@ -462,6 +512,7 @@ export default function Navbar() {
                   onClick={closeMenus}
                 >
                   {link.label}
+                  <span aria-hidden="true">↗</span>
                 </Link>
               ))}
 
@@ -471,16 +522,11 @@ export default function Navbar() {
                 onClick={handleLogout}
                 disabled={loggingOut}
               >
-                {loggingOut
-                  ? t.loggingOut
-                  : t.logout}
+                {loggingOut ? t.loggingOut : t.logout}
               </button>
 
               {logoutError && (
-                <p
-                  role="alert"
-                  className={styles.logoutError}
-                >
+                <p className={styles.logoutError} role="alert">
                   {logoutError}
                 </p>
               )}
@@ -502,7 +548,7 @@ export default function Navbar() {
               </Link>
             </div>
           ) : session === "unavailable" ? (
-            <div className={styles.mobileActions}>
+            <div className={styles.mobileAccount}>
               <button
                 type="button"
                 className={styles.mobileLogout}

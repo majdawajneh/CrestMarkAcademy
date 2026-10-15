@@ -883,15 +883,13 @@ namespace Application.Services
                 DiscountPrice =
                     course.DiscountPrice,
 
-                Language =
-                    course.Language,
+                Language = course.Language,
 
-                Level =
-                    course.Level,
+                Level = course.Level,
 
-                CategoryName =
-                    course.Category?.Name
-                    ?? string.Empty,
+                Status = course.Status,
+
+                CategoryName = course.Category?.Name ?? string.Empty,
 
                 InstructorName =
                     GetInstructorName(

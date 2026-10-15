@@ -8,6 +8,10 @@ namespace Application.Services.Interfaces
             GetByIdAsync(int id);
 
 
+        Task<CertificateDetailsDto?>GetMyCertificateByIdAsync(int userId,int certificateId);
+
+
+
         Task<CertificateDetailsDto?>
             GetByCertificateNumberAsync(
                 string certificateNumber

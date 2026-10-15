@@ -85,5 +85,20 @@ namespace Infrastructure.Repositories
                 )
                 .ToListAsync();
         }
+
+
+        // ======================================
+        // Get All Enrollments For Admin
+        // Includes Active, Completed, Cancelled
+        // ======================================
+
+        public async Task<List<Enrollment>> GetAllForAdminAsync()
+        {
+            return await _context.Set<Enrollment>()
+                .AsNoTracking()
+                .OrderByDescending(e => e.EnrolledAt)
+                .ToListAsync();
+        }
+
     }
 }

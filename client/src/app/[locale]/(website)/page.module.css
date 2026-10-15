@@ -1,0 +1,1349 @@
+
+.page {
+  --navy: #102d52;
+  --navy-dark: #0b2545;
+  --blue: #2675ad;
+  --ink: #15395b;
+  --muted: #72869a;
+  --line: #dce7f0;
+  --ice: #ecf5fc;
+  background: #fff;
+  color: var(--ink);
+  overflow: clip;
+}
+
+.page a {
+  text-decoration: none;
+}
+
+.container {
+  width: min(calc(100% - 88px), 1330px);
+  margin-inline: auto;
+}
+
+.kicker {
+  display: block;
+  color: #327cb4;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.5;
+  letter-spacing: .11em;
+}
+
+.page a:focus-visible {
+  outline: 3px solid #69b4ed;
+  outline-offset: 4px;
+}
+
+/* HERO */
+
+.hero {
+  background: #f7faff;
+}
+
+.heroLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.03fr) minmax(0, .97fr);
+  gap: clamp(25px, 4vw, 64px);
+  align-items: center;
+  min-height: 730px;
+  padding: 58px 0 90px;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  padding-block: 45px;
+}
+
+.heroEyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #347dae;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.heroEyebrow > span {
+  width: 32px;
+  height: 2px;
+  background: #3f8fc6;
+  flex-shrink: 0;
+}
+
+.hero h1 {
+  margin: 34px 0 0;
+  max-width: 700px;
+  color: #0e3156;
+  font-size: clamp(45px, 5vw, 76px);
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -.052em;
+}
+
+.hero h1 > span,
+.hero h1 > em {
+  display: block;
+}
+
+.hero h1 > em {
+  margin-top: 9px;
+  font-style: normal;
+  color: #2b7bb8;
+}
+
+.heroDescription {
+  max-width: 565px;
+  margin: 27px 0 0;
+  color: #617b93;
+  font-size: 17px;
+  line-height: 1.95;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 19px;
+  margin-top: 37px;
+}
+
+.primaryButton,
+.secondaryButton,
+.darkButton,
+.closingPrimary,
+.closingSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 52px;
+  padding: 13px 22px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  transition:
+    background-color .2s ease,
+    transform .2s ease;
+}
+
+.primaryButton {
+  background: #153f69;
+  color: #fff;
+}
+
+.primaryButton:hover,
+.darkButton:hover {
+  background: #276fa6;
+  transform: translateY(-2px);
+}
+
+.secondaryButton {
+  color: #214d74;
+  padding-inline: 10px;
+}
+
+.secondaryButton:hover {
+  color: #267bb8;
+}
+
+.heroFootnote {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 79px;
+  color: #7891a5;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.brandIcon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #c6ddeb;
+  border-radius: 7px;
+  background: #fff;
+  color: #2c729f;
+  font-size: 20px;
+}
+
+.footnoteDivider {
+  width: 24px;
+  height: 1px;
+  background: #bbd0e2;
+}
+
+/* HERO IMAGE COMPOSITION */
+
+.heroVisual {
+  position: relative;
+  min-width: 0;
+  min-height: 610px;
+}
+
+.heroMainPhoto,
+.heroSidePhoto,
+.learningPhotoLarge,
+.learningPhotoSmall,
+.experiencePhoto,
+.technologyPhoto,
+.closingImage {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.heroMainPhoto {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  width: 84%;
+  height: 86%;
+  border-radius: 13px;
+  background-color: #b6cddd;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgb(8 28 51 / 3%),
+      rgb(8 28 51 / 13%)
+    ),
+    url("https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1500&q=85");
+}
+
+.heroSidePhoto {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  width: 45%;
+  height: 43%;
+  border: 9px solid #f7faff;
+  border-radius: 13px;
+  background-color: #abc8db;
+  background-image:
+    url("https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=950&q=85");
+  box-shadow: 0 20px 55px rgb(21 57 91 / 13%);
+}
+
+.heroPhotoBadge {
+  position: absolute;
+  top: 26px;
+  inset-inline-end: 26px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1px solid rgb(255 255 255 / 65%);
+  border-radius: 5px;
+  background: rgb(15 40 65 / 52%);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .07em;
+}
+
+.badgeLine {
+  width: 17px;
+  height: 2px;
+  background: #fff;
+}
+
+.heroFloatingCard {
+  position: absolute;
+  inset-inline-end: -13px;
+  bottom: 21px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: min(300px, 62%);
+  padding: 20px 22px;
+  border: 1px solid #dce8f2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 20px 55px rgb(9 42 77 / 13%);
+}
+
+.floatingIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 45px;
+  height: 45px;
+  border-radius: 9px;
+  background: #eaf5fe;
+  color: #327fb8;
+  font-size: 24px;
+}
+
+.heroFloatingCard > div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.heroFloatingCard strong {
+  color: #15395b;
+  font-size: 10px;
+  letter-spacing: .07em;
+}
+
+.heroFloatingCard div span {
+  color: #758ca1;
+  font-size: 11px;
+}
+
+/* INTRO */
+
+.introStatement {
+  background: #102e54;
+  color: #fff;
+  padding: 72px 0;
+}
+
+.introLayout {
+  display: grid;
+  grid-template-columns: minmax(170px, .25fr) minmax(0, 1fr) 75px;
+  align-items: center;
+  gap: 45px;
+}
+
+.introLayout .kicker {
+  align-self: start;
+  color: #a2cbec;
+  padding-top: 12px;
+}
+
+.introLayout h2 {
+  margin: 0;
+  max-width: 830px;
+  color: #fff;
+  font-size: clamp(29px, 3.25vw, 47px);
+  line-height: 1.25;
+  letter-spacing: -.03em;
+}
+
+.introLayout p {
+  max-width: 790px;
+  margin: 16px 0 0;
+  color: #bcd2e5;
+  font-size: 14px;
+  line-height: 1.95;
+}
+
+.introSymbol {
+  align-self: center;
+  color: #83b4d9;
+  font-size: 76px;
+  font-weight: 300;
+}
+
+/* CATEGORIES */
+
+.categoriesSection {
+  padding: 110px 0 112px;
+  background: #fff;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 35px;
+  margin-bottom: 39px;
+}
+
+.sectionHeader h2 {
+  margin: 15px 0 13px;
+  max-width: 780px;
+  color: #12395d;
+  font-size: clamp(31px, 3.5vw, 48px);
+  letter-spacing: -.035em;
+  line-height: 1.23;
+}
+
+.sectionHeader p {
+  max-width: 680px;
+  margin: 0;
+  color: #738a9e;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.inlineLink {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 14px;
+  color: #236d9e;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.inlineLink:hover {
+  color: #103e66;
+}
+
+.categoryCollection {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.categoryTile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 35px;
+  min-height: 195px;
+  padding: 25px 27px;
+  border: 1px solid #dce9f3;
+  border-radius: 10px;
+  background:
+    linear-gradient(145deg, #f7fbff 0%, #ebf5fd 100%);
+  color: #143c60;
+  transition:
+    background-color .2s ease,
+    border-color .2s ease,
+    transform .2s ease;
+}
+
+.categoryTile:nth-child(3n + 2) {
+  background: #f2f7fc;
+}
+
+.categoryTile:nth-child(3n + 3) {
+  background: #e8f2fa;
+}
+
+.categoryTile:hover {
+  transform: translateY(-3px);
+  border-color: #a8cde8;
+  background: #dceefd;
+}
+
+.categoryTileTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  color: #568bb4;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.categoryArrow {
+  font-size: 22px;
+}
+
+.categoryTile strong {
+  font-size: clamp(20px, 2vw, 27px);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.categoryTileBottom {
+  color: #779ab6;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+
+.categoriesEmpty {
+  display: block;
+  padding: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: #246fa2;
+}
+
+.coursesArea {
+  padding-top: 35px;
+  background: #f7faff;
+}
+
+.coursesAreaTop {
+  width: min(calc(100% - 88px), 1330px);
+  margin: 0 auto;
+}
+
+/* LEARNING EXPERIENCE */
+
+.learningSection {
+  padding: 130px 0;
+  background: #fff;
+}
+
+.learningLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .95fr);
+  align-items: center;
+  gap: clamp(55px, 8vw, 115px);
+}
+
+.learningGallery {
+  position: relative;
+  min-height: 625px;
+}
+
+.learningPhotoLarge {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  width: 79%;
+  height: 83%;
+  border-radius: 12px;
+  background-color: #b7cad9;
+  background-image:
+    url("https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1400&q=85");
+}
+
+.learningPhotoSmall {
+  position: absolute;
+  inset-inline-end: 0;
+  bottom: 0;
+  width: 51%;
+  height: 45%;
+  border: 9px solid #fff;
+  border-radius: 13px;
+  background-color: #abc3d8;
+  background-image:
+    url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1100&q=85");
+  box-shadow: 0 17px 45px rgb(18 53 86 / 11%);
+}
+
+.learningGalleryCaption {
+  position: absolute;
+  inset-inline-start: 21px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.learningGalleryCaption strong {
+  font-size: 11px;
+  color: #163e62;
+  letter-spacing: .09em;
+}
+
+.learningGalleryCaption span {
+  font-size: 10px;
+  color: #85a0b4;
+}
+
+.learningContent {
+  min-width: 0;
+}
+
+.learningContent h2,
+.experienceContent h2,
+.technologyContent h2 {
+  margin: 19px 0 21px;
+  color: #13395e;
+  font-size: clamp(32px, 3.4vw, 49px);
+  line-height: 1.23;
+  letter-spacing: -.035em;
+}
+
+.learningLead,
+.experienceContent > p,
+.technologyContent > p {
+  max-width: 590px;
+  margin: 0;
+  color: #70889d;
+  font-size: 15px;
+  line-height: 1.95;
+}
+
+.learningFeatures {
+  margin-top: 39px;
+  border-top: 1px solid #dbe7f0;
+}
+
+.learningFeature {
+  display: grid;
+  grid-template-columns: 45px 1fr;
+  gap: 14px;
+  padding: 24px 0;
+  border-bottom: 1px solid #dbe7f0;
+}
+
+.learningFeature > span {
+  color: #4a8aba;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.learningFeature h3 {
+  margin: 0 0 8px;
+  color: #1a4469;
+  font-size: 18px;
+}
+
+.learningFeature p {
+  margin: 0;
+  color: #7a90a3;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* PERSONAL LEARNING */
+
+.experienceSection {
+  padding: 105px 0;
+  background: #eaf4fc;
+}
+
+.experienceLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(45px, 7vw, 105px);
+}
+
+.experienceContent {
+  min-width: 0;
+}
+
+.experienceList {
+  list-style: none;
+  padding: 0;
+  margin: 31px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.experienceList li {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  color: #285476;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+
+.experienceList li span {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: #d2e7f7;
+  color: #2279b2;
+  font-size: 12px;
+}
+
+.darkButton {
+  min-height: 48px;
+  background: #143e66;
+  color: #fff;
+}
+
+.experienceVisual {
+  position: relative;
+  height: 520px;
+  border-radius: 12px;
+  background: #99b8cf;
+  overflow: hidden;
+}
+
+.experiencePhoto {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      to top,
+      rgb(9 33 59 / 64%),
+      transparent 55%
+    ),
+    url("https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1300&q=85");
+}
+
+.experienceCaption {
+  position: absolute;
+  inset-inline: 31px;
+  bottom: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .09em;
+}
+
+/* TECHNOLOGY */
+
+.technologySection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 580px;
+  background: #102f55;
+}
+
+.technologyVisual {
+  position: relative;
+  min-height: 580px;
+  overflow: hidden;
+  background: #234767;
+}
+
+.technologyPhoto {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      to top,
+      rgb(10 33 58 / 61%),
+      transparent 60%
+    ),
+    url("https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1500&q=85");
+}
+
+.technologyPhotoLabel {
+  position: absolute;
+  inset-inline-start: 45px;
+  bottom: 35px;
+  color: #fff;
+  font-size: 11px;
+  letter-spacing: .14em;
+  font-weight: 800;
+}
+
+.technologyContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(45px, 7vw, 105px);
+  max-width: 760px;
+  color: #fff;
+}
+
+.technologyContent .kicker {
+  color: #a3cced;
+}
+
+.technologyContent h2 {
+  max-width: 590px;
+  color: #fff;
+}
+
+.technologyContent > p {
+  color: #bfd4e7;
+}
+
+.technologyContent > a {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 19px;
+  margin-top: 30px;
+  padding: 13px 18px;
+  border: 1px solid #7198bb;
+  border-radius: 7px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.technologyContent > a:hover {
+  background: #245782;
+}
+
+/* HOW IT WORKS */
+
+.journeySection {
+  padding: 125px 0 140px;
+  background: #fff;
+}
+
+.journeyHeading {
+  max-width: 760px;
+  margin-bottom: 49px;
+}
+
+.journeyHeading h2 {
+  margin: 17px 0 0;
+  color: #12395e;
+  font-size: clamp(32px, 3.6vw, 49px);
+  line-height: 1.25;
+  letter-spacing: -.035em;
+}
+
+.journeySteps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.journeyStep {
+  position: relative;
+  min-width: 0;
+  padding: 29px 20px 10px 0;
+  border-top: 2px solid #d7e5f0;
+}
+
+.stepNumber {
+  display: block;
+  margin-bottom: 48px;
+  color: #357eb4;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.journeyStep h3 {
+  margin: 0 0 12px;
+  color: #174064;
+  font-size: 21px;
+}
+
+.journeyStep p {
+  max-width: 280px;
+  margin: 0;
+  color: #7d91a4;
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+/* FINAL CTA */
+
+.closingSection {
+  padding-bottom: 115px;
+}
+
+.closingPanel {
+  position: relative;
+  overflow: hidden;
+  min-height: 430px;
+  border-radius: 15px;
+  background: #102d52;
+  display: grid;
+  grid-template-columns: .43fr .57fr;
+  color: #fff;
+}
+
+.closingImage {
+  position: relative;
+  min-height: 430px;
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgb(16 45 82 / 22%)
+    ),
+    url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1100&q=85");
+}
+
+.closingContent {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(35px, 5.5vw, 73px);
+}
+
+.closingEyebrow {
+  color: #a7cdeb;
+  font-size: 11px;
+  letter-spacing: .12em;
+  font-weight: 800;
+}
+
+.closingContent h2 {
+  margin: 18px 0;
+  color: #fff;
+  font-size: clamp(30px, 3.7vw, 51px);
+  line-height: 1.23;
+  letter-spacing: -.03em;
+}
+
+.closingContent p {
+  margin: 0;
+  color: #c4d8e9;
+  font-size: 14px;
+  line-height: 1.95;
+}
+
+.closingActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 15px;
+  margin-top: 31px;
+}
+
+.closingPrimary {
+  background: #fff;
+  color: #16446a;
+  min-height: 49px;
+}
+
+.closingPrimary:hover {
+  background: #e5f3fd;
+}
+
+.closingSecondary {
+  color: #e7f1fa;
+  min-height: 49px;
+  padding-inline: 8px;
+}
+
+.closingSecondary:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* RTL */
+
+.page[dir="rtl"] .heroEyebrow,
+.page[dir="rtl"] .kicker,
+.page[dir="rtl"] .closingEyebrow,
+.page[dir="rtl"] .categoryTileBottom {
+  letter-spacing: 0;
+}
+
+.page[dir="rtl"] .hero h1,
+.page[dir="rtl"] .introLayout h2,
+.page[dir="rtl"] .sectionHeader h2,
+.page[dir="rtl"] .learningContent h2,
+.page[dir="rtl"] .experienceContent h2,
+.page[dir="rtl"] .technologyContent h2,
+.page[dir="rtl"] .journeyHeading h2,
+.page[dir="rtl"] .closingContent h2 {
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+.page[dir="rtl"] .journeyStep {
+  padding-right: 0;
+  padding-left: 20px;
+}
+
+/* TABLET */
+
+@media (max-width: 1100px) {
+  .heroLayout {
+    min-height: 650px;
+  }
+
+  .hero h1 {
+    font-size: clamp(41px, 4.6vw, 58px);
+  }
+
+  .heroVisual {
+    min-height: 520px;
+  }
+
+  .learningLayout {
+    gap: 40px;
+  }
+
+  .learningGallery {
+    min-height: 520px;
+  }
+
+  .experienceLayout {
+    gap: 40px;
+  }
+}
+
+@media (max-width: 900px) {
+  .container,
+  .coursesAreaTop {
+    width: min(calc(100% - 44px), 730px);
+  }
+
+  .heroLayout {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 57px 0 75px;
+    min-height: 0;
+  }
+
+  .heroContent {
+    padding: 0;
+  }
+
+  .hero h1 {
+    font-size: clamp(43px, 6vw, 65px);
+  }
+
+  .heroVisual {
+    width: 100%;
+    min-height: 590px;
+  }
+
+  .heroFootnote {
+    margin-top: 39px;
+  }
+
+  .introLayout {
+    grid-template-columns: 1fr;
+    gap: 17px;
+  }
+
+  .introSymbol {
+    display: none;
+  }
+
+  .categoryCollection {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .learningLayout,
+  .experienceLayout {
+    grid-template-columns: 1fr;
+    gap: 55px;
+  }
+
+  .learningGallery {
+    min-height: 600px;
+    width: min(100%, 620px);
+  }
+
+  .learningContent {
+    max-width: 680px;
+  }
+
+  .experienceVisual {
+    height: 470px;
+  }
+
+  .technologySection {
+    grid-template-columns: 1fr;
+  }
+
+  .technologyVisual {
+    min-height: 430px;
+  }
+
+  .technologyContent {
+    padding: 65px 35px;
+  }
+
+  .journeySteps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 33px;
+  }
+
+  .closingPanel {
+    grid-template-columns: 1fr;
+  }
+
+  .closingImage {
+    min-height: 320px;
+  }
+
+  .closingContent {
+    padding: 48px 35px;
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .container,
+  .coursesAreaTop {
+    width: calc(100% - 36px);
+  }
+
+  .heroLayout {
+    padding: 43px 0 56px;
+    gap: 39px;
+  }
+
+  .heroEyebrow {
+    font-size: 10px;
+  }
+
+  .hero h1 {
+    margin-top: 26px;
+    font-size: clamp(36px, 9vw, 49px);
+  }
+
+  .heroDescription {
+    margin-top: 20px;
+    font-size: 14px;
+    line-height: 1.9;
+  }
+
+  .heroActions {
+    gap: 10px;
+    margin-top: 25px;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    min-height: 49px;
+    padding-inline: 15px;
+  }
+
+  .heroFootnote {
+    gap: 8px;
+    font-size: 8px;
+    margin-top: 35px;
+  }
+
+  .heroVisual {
+    min-height: 400px;
+  }
+
+  .heroMainPhoto {
+    width: 91%;
+    height: 86%;
+  }
+
+  .heroSidePhoto {
+    width: 50%;
+    height: 39%;
+    border-width: 5px;
+  }
+
+  .heroPhotoBadge {
+    inset-inline-end: 13px;
+    top: 15px;
+    padding: 8px;
+    font-size: 8px;
+  }
+
+  .heroFloatingCard {
+    inset-inline-end: 0;
+    bottom: 13px;
+    padding: 11px 12px;
+    width: 54%;
+    gap: 9px;
+  }
+
+  .floatingIcon {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+
+  .heroFloatingCard strong {
+    font-size: 8px;
+  }
+
+  .heroFloatingCard div span {
+    font-size: 9px;
+  }
+
+  .introStatement {
+    padding: 50px 0;
+  }
+
+  .introLayout h2 {
+    font-size: 29px;
+  }
+
+  .introLayout p {
+    font-size: 13px;
+  }
+
+  .categoriesSection {
+    padding: 70px 0;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 21px;
+  }
+
+  .sectionHeader h2 {
+    font-size: 32px;
+  }
+
+  .categoryCollection {
+    grid-template-columns: 1fr;
+  }
+
+  .categoryTile {
+    min-height: 155px;
+    gap: 20px;
+    padding: 22px;
+  }
+
+  .learningSection {
+    padding: 75px 0;
+  }
+
+  .learningGallery {
+    min-height: 400px;
+  }
+
+  .learningPhotoLarge {
+    width: 83%;
+  }
+
+  .learningPhotoSmall {
+    width: 50%;
+    border-width: 5px;
+  }
+
+  .learningContent h2,
+  .experienceContent h2,
+  .technologyContent h2 {
+    font-size: 33px;
+  }
+
+  .learningLead,
+  .experienceContent > p,
+  .technologyContent > p {
+    font-size: 14px;
+  }
+
+  .learningFeature {
+    grid-template-columns: 34px 1fr;
+  }
+
+  .experienceSection {
+    padding: 74px 0;
+  }
+
+  .experienceVisual {
+    height: 340px;
+  }
+
+  .experienceCaption {
+    inset-inline: 20px;
+    bottom: 20px;
+    gap: 9px;
+    font-size: 9px;
+  }
+
+  .technologyVisual {
+    min-height: 320px;
+  }
+
+  .technologyPhotoLabel {
+    inset-inline-start: 20px;
+    bottom: 21px;
+    font-size: 9px;
+  }
+
+  .technologyContent {
+    padding: 58px 22px;
+  }
+
+  .journeySection {
+    padding: 76px 0;
+  }
+
+  .journeyHeading h2 {
+    font-size: 32px;
+  }
+
+  .journeySteps {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .journeyStep {
+    padding: 19px 0 20px;
+  }
+
+  .stepNumber {
+    margin-bottom: 22px;
+  }
+
+  .closingSection {
+    padding-bottom: 70px;
+  }
+
+  .closingImage {
+    min-height: 235px;
+  }
+
+  .closingContent {
+    padding: 35px 23px;
+  }
+
+  .closingContent h2 {
+    font-size: 33px;
+  }
+
+  .closingActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .closingPrimary,
+  .closingSecondary {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Home visual refinements */
+
+@media (min-width: 901px) {
+  .heroLayout {
+    min-height: 650px;
+    padding-block: 45px 62px;
+  }
+
+  .heroVisual {
+    min-height: 550px;
+  }
+
+  .heroFootnote {
+    margin-top: 48px;
+  }
+
+  .introStatement {
+    padding-block: 55px;
+  }
+
+  .categoriesSection {
+    padding-block: 78px 86px;
+  }
+
+  .learningSection {
+    padding-block: 90px;
+  }
+
+  .experienceSection {
+    padding-block: 80px;
+  }
+
+  .journeySection {
+    padding-block: 85px 95px;
+  }
+}
+
+.sectionHeader p,
+.learningLead,
+.experienceContent > p,
+.technologyContent > p,
+.closingContent p {
+  font-size: 15px;
+  line-height: 1.85;
+}
+
+.categoryTile strong {
+  font-size: clamp(21px, 2vw, 29px);
+}
+
+.learningFeature p,
+.journeyStep p {
+  font-size: 14px;
+  line-height: 1.85;
+}

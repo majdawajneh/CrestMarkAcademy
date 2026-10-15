@@ -75,6 +75,52 @@ namespace Application.Services
         }
 
 
+
+
+        // ======================================
+        // Get All Enrollments - Admin
+        // ======================================
+
+        public async Task<List<EnrollmentDto>> GetAllForAdminAsync()
+        {
+            var enrollments = await _enrollmentDetailsRepo
+                .GetAllForAdminAsync();
+
+            return enrollments
+                .Select(MapToDto)
+                .ToList();
+        }
+
+
+        // ======================================
+        // Get All User Enrollments - Admin
+        // ======================================
+
+        public async Task<List<EnrollmentDto>> GetByUserIdForAdminAsync(
+            int userId)
+        {
+            // Admin can inspect inactive users too.
+            // Do not use ValidateUserAsync here,
+            // because it rejects inactive accounts.
+
+            var user = await _userRepo.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                throw new KeyNotFoundException(
+                    "User was not found."
+                );
+            }
+
+            var enrollments = await _enrollmentDetailsRepo
+                .GetByUserIdWithCoursesAsync(userId);
+
+            return enrollments
+                .Select(MapToDto)
+                .OrderByDescending(e => e.EnrolledAt)
+                .ToList();
+        }
+
         // =========================
         // Get Enrollment By Id
         // =========================

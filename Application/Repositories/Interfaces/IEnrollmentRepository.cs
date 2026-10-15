@@ -19,5 +19,7 @@ namespace Application.Repositories.Interfaces
             GetByUserIdWithCoursesAsync(
                 int userId
             );
+
+        Task<List<Enrollment>> GetAllForAdminAsync();
     }
 }

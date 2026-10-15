@@ -1,46 +1,55 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CrestMarkAcademy.Exceptions
 {
-    public class GlobalExceptionHandler
-        : IExceptionHandler
+    public class GlobalExceptionHandler : IExceptionHandler
     {
-        private readonly ILogger<GlobalExceptionHandler>
-            _logger;
-
+        private readonly ILogger<GlobalExceptionHandler> _logger;
 
         public GlobalExceptionHandler(
             ILogger<GlobalExceptionHandler> logger)
         {
-            _logger =
-                logger;
+            _logger = logger;
         }
 
-
-        public async ValueTask<bool>
-            TryHandleAsync(
-                HttpContext httpContext,
-                Exception exception,
-                CancellationToken cancellationToken)
+        public async ValueTask<bool> TryHandleAsync(
+            HttpContext httpContext,
+            Exception exception,
+            CancellationToken cancellationToken)
         {
-            // =========================
-            // Status Code
-            // =========================
+            // =====================================
+            // Client disconnected / request canceled
+            // =====================================
 
-            var statusCode =
-                GetStatusCode(
-                    exception
+            if (
+                exception is OperationCanceledException &&
+                httpContext.RequestAborted.IsCancellationRequested
+            )
+            {
+                _logger.LogDebug(
+                    "Request canceled by client. Path: {Path}",
+                    httpContext.Request.Path
                 );
 
+                // The client disconnected.
+                // There is no useful response to send.
+                return true;
+            }
 
-            // =========================
+            // =====================================
+            // Status Code
+            // =====================================
+
+            var statusCode = GetStatusCode(exception);
+
+            // =====================================
             // Logging
-            // =========================
+            // =====================================
 
-            if (statusCode >=
-                StatusCodes.Status500InternalServerError)
+            if (statusCode >= StatusCodes.Status500InternalServerError)
             {
                 _logger.LogError(
                     exception,
@@ -52,7 +61,6 @@ namespace CrestMarkAcademy.Exceptions
             else
             {
                 _logger.LogWarning(
-                    exception,
                     "Request failed. Path: {Path}. Status: {StatusCode}. Message: {Message}",
                     httpContext.Request.Path,
                     statusCode,
@@ -60,70 +68,77 @@ namespace CrestMarkAcademy.Exceptions
                 );
             }
 
-
-            // =========================
+            // =====================================
             // Problem Details
-            // =========================
+            // =====================================
 
-            var problemDetails =
-                new ProblemDetails
-                {
-                    Status =
-                        statusCode,
+            var problemDetails = new ProblemDetails
+            {
+                Status = statusCode,
+                Title = GetTitle(exception),
+                Detail = GetDetail(exception),
+                Instance = httpContext.Request.Path
+            };
 
-                    Title =
-                        GetTitle(
-                            exception
-                        ),
-
-                    Detail =
-                        GetDetail(
-                            exception
-                        ),
-
-                    Instance =
-                        httpContext.Request.Path
-                };
-
-
-            // =========================
-            // Trace Id
-            // =========================
-
-            problemDetails.Extensions[
-                "traceId"
-            ] =
+            problemDetails.Extensions["traceId"] =
                 httpContext.TraceIdentifier;
 
-
-            // =========================
+            // =====================================
             // Response
-            // =========================
+            // =====================================
 
-            httpContext.Response.StatusCode =
-                statusCode;
+            if (httpContext.RequestAborted.IsCancellationRequested)
+            {
+                _logger.LogDebug(
+                    "Response skipped because client disconnected. Path: {Path}",
+                    httpContext.Request.Path
+                );
+
+                return true;
+            }
+
+            if (httpContext.Response.HasStarted)
+            {
+                _logger.LogWarning(
+                    "Cannot write problem details because response has already started. Path: {Path}",
+                    httpContext.Request.Path
+                );
+
+                return false;
+            }
+
+            httpContext.Response.StatusCode = statusCode;
 
             httpContext.Response.ContentType =
                 "application/problem+json";
 
-
-            await httpContext.Response
-                .WriteAsJsonAsync(
+            try
+            {
+                await httpContext.Response.WriteAsJsonAsync(
                     problemDetails,
                     cancellationToken
                 );
-
+            }
+            catch (OperationCanceledException)
+                when (
+                    httpContext.RequestAborted.IsCancellationRequested ||
+                    cancellationToken.IsCancellationRequested
+                )
+            {
+                _logger.LogDebug(
+                    "Problem details response canceled. Path: {Path}",
+                    httpContext.Request.Path
+                );
+            }
 
             return true;
         }
 
-
-        // =========================
+        // =====================================
         // Status Code
-        // =========================
+        // =====================================
 
-        private static int GetStatusCode(
-            Exception exception)
+        private static int GetStatusCode(Exception exception)
         {
             return exception switch
             {
@@ -147,13 +162,11 @@ namespace CrestMarkAcademy.Exceptions
             };
         }
 
-
-        // =========================
+        // =====================================
         // Title
-        // =========================
+        // =====================================
 
-        private static string GetTitle(
-            Exception exception)
+        private static string GetTitle(Exception exception)
         {
             return exception switch
             {
@@ -177,18 +190,16 @@ namespace CrestMarkAcademy.Exceptions
             };
         }
 
-
-        // =========================
+        // =====================================
         // Safe Detail
-        // =========================
+        // =====================================
 
-        private static string GetDetail(
-            Exception exception)
+        private static string GetDetail(Exception exception)
         {
             return exception switch
             {
                 UnauthorizedAccessException =>
-                    exception.Message,
+                    "Your session is invalid or has expired.",
 
                 KeyNotFoundException =>
                     exception.Message,

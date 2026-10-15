@@ -1,0 +1,295 @@
+
+.manager {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #dde9f3;
+  border-radius: 9px;
+  background: #fff;
+  color: #173b5d;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.heading h5 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.primary,
+.secondary,
+.deleteButton,
+.danger {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 7px;
+  min-height: 33px;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primary {
+  color: #fff;
+  border: 1px solid #194e7d;
+  background: #194e7d;
+}
+
+.primary:hover:not(:disabled) {
+  background: #28679d;
+}
+
+.secondary {
+  color: #345f83;
+  border: 1px solid #d2e0eb;
+  background: #fff;
+}
+
+.secondary:hover:not(:disabled) {
+  background: #f3f8fd;
+}
+
+.deleteButton {
+  color: #a94651;
+  border: 1px solid #efd5d8;
+  background: #fff;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: #fff4f4;
+}
+
+.danger {
+  color: #fff;
+  border: 1px solid #a9414b;
+  background: #a9414b;
+}
+
+.manager button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.manager button:focus-visible,
+.manager a:focus-visible,
+.manager input:focus-visible {
+  outline: 2px solid #60a2d7;
+  outline-offset: 2px;
+}
+
+.empty {
+  margin: 0;
+  padding: 16px 8px;
+  color: #8495a6;
+  font-size: 12px;
+}
+
+.empty p {
+  margin-top: 0;
+}
+
+.list {
+  border: 1px solid #e5edf4;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  border-bottom: 1px solid #edf2f6;
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.order {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 29px;
+  height: 29px;
+  border-radius: 7px;
+  background: #eff6fc;
+  color: #3478a9;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.itemBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemBody strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  color: #183d5f;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: 11px;
+  color: #7c90a2;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.success,
+.error,
+.inlineError {
+  margin: 10px 0;
+  border-radius: 7px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.success {
+  border: 1px solid #bfe2cc;
+  background: #eff9f2;
+  color: #286e44;
+}
+
+.error,
+.inlineError {
+  border: 1px solid #efc7c7;
+  background: #fff3f3;
+  color: #a13e45;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10030;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgb(8 29 53 / 65%);
+  backdrop-filter: blur(4px);
+}
+
+.dialog {
+  box-sizing: border-box;
+  width: min(100%, 520px);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  border: 1px solid #dae6f0;
+  border-radius: 14px;
+  padding: 26px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgb(7 25 45 / 25%);
+}
+
+.dialog h2 {
+  margin: 0 0 18px;
+  font-size: 19px;
+  color: #183c60;
+}
+
+.dialog > p {
+  color: #647d92;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.dialog label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 15px;
+  color: #345a7a;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.dialog input:not([type="checkbox"]) {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #d6e3ee;
+  border-radius: 8px;
+  background: #fff;
+  color: #193f61;
+  font: inherit;
+  font-size: 13px;
+}
+
+.dialog small {
+  color: #8497a8;
+  font-size: 10px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.twoColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dialog .checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 17px;
+  height: 17px;
+  accent-color: #1b639d;
+}
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@media (max-width: 650px) {
+  .heading,
+  .item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .twoColumns {
+    grid-template-columns: 1fr;
+  }
+
+  .dialog {
+    padding: 20px 16px;
+  }
+}
