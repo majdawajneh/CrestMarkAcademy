@@ -1,8 +1,8 @@
-﻿using Application.Dto_s.Certificate;
+﻿
+using Application.Dto_s.Certificate;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 
 namespace CrestMarkAcademy.Controllers.Admin
 {
@@ -11,37 +11,41 @@ namespace CrestMarkAcademy.Controllers.Admin
     [Authorize(Roles = "Admin")]
     public class AdminCertificatesController : ControllerBase
     {
-        private readonly
-            ICertificateService
-            _certificateService;
-
+        private readonly ICertificateService _certificateService;
 
         public AdminCertificatesController(
             ICertificateService certificateService)
         {
-            _certificateService =
-                certificateService;
+            _certificateService = certificateService;
         }
 
-
         // =========================
-        // Issue Certificate
-        // Manually
+        // Get All Certificates
+        // Admin Only
         // =========================
 
-        [HttpPost(
-            "enrollments/{enrollmentId:int}/issue")]
+        [HttpGet]
         public async Task<
-            ActionResult<CertificateDetailsDto>>
-            Issue(
-                int enrollmentId)
+            ActionResult<IEnumerable<CertificateDetailsDto>>>
+            GetAll()
         {
-            var certificate =
-                await _certificateService
-                    .IssueCertificateAsync(
-                        enrollmentId
-                    );
+            var certificates = await _certificateService
+                .GetAllAsync();
 
+            return Ok(certificates);
+        }
+
+        // =========================
+        // Issue Certificate Manually
+        // Admin Only
+        // =========================
+
+        [HttpPost("enrollments/{enrollmentId:int}/issue")]
+        public async Task<ActionResult<CertificateDetailsDto>>
+            Issue(int enrollmentId)
+        {
+            var certificate = await _certificateService
+                .IssueCertificateAsync(enrollmentId);
 
             return Ok(certificate);
         }

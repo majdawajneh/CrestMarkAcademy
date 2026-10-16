@@ -6,6 +6,9 @@ import type { Metadata } from "next";
 import FeaturedCourses from "@/components/FeaturedCourses";
 import styles from "./page.module.css";
 
+
+export const instant = false;
+
 type Locale = "en" | "ar";
 
 type Props = {

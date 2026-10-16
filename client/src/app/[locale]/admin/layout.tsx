@@ -13,6 +13,8 @@ import { notFound, redirect } from "next/navigation";
 import styles from "./layout.module.css";
 
 
+export const instant = false;
+
 
 type Props = {
 
@@ -664,44 +666,67 @@ export default async function AdminLayout({
 
               <div className={styles.navList}>                                          
                 
-                {section.items.map((item) =>
-                  ["book", "grid", "users", "check", "receipt"].includes(
-                    item.icon
-                  ) ? (
-                    <ActiveAdminLink
-                      key={item.label}
-                      href={
-                              item.label === t.payments
-                                ? `/${locale}/admin/payments`
-                                : item.icon === "book"
-                                  ? `/${locale}/admin/courses`
-                                  : item.icon === "grid"
-                                    ? `/${locale}/admin/categories`
-                                    : item.icon === "users"
-                                      ? `/${locale}/admin/students`
-                                      : item.icon === "check"
-                                        ? `/${locale}/admin/enrollments`
-                                        : `/${locale}/admin/orders`
-                            }
-                      className={styles.navItem}
-                      activeClassName={styles.navActive}
-                      indicatorClassName={styles.activeIndicator}
-                    >
-                      <SidebarIcon name={item.icon} />
-                      <span>{item.label}</span>
-                    </ActiveAdminLink>
-                  ) : (
-                    <div
-                      key={item.label}
-                      className={`${styles.navItem} ${styles.navDisabled}`}
-                      title={t.comingSoon}
-                    >
-                      <SidebarIcon name={item.icon} />
-                      <span>{item.label}</span>
-                      <small>{t.comingSoon}</small>
-                    </div>
-                  )
-                )}
+                
+
+
+{section.items.map((item) =>
+  (
+        [
+      "book",
+      "grid",
+      "users",
+      "check",
+      "receipt",
+      "tag",
+      "award",
+      "chart",
+    ].includes(item.icon) ||
+    item.label === t.payments
+  ) ? (
+    <ActiveAdminLink
+      key={item.label}
+      
+          href={
+            item.label === t.payments
+              ? `/${locale}/admin/payments`
+              : item.icon === "book"
+                ? `/${locale}/admin/courses`
+                : item.icon === "grid"
+                  ? `/${locale}/admin/categories`
+                  : item.icon === "users"
+                    ? `/${locale}/admin/students`
+                    : item.icon === "check"
+                      ? `/${locale}/admin/enrollments`
+                      : item.icon === "tag"
+                        ? `/${locale}/admin/coupons`
+                        : item.icon === "award"
+                          ? `/${locale}/admin/certificates`
+                          : item.icon === "chart"
+                            ? `/${locale}/admin/reports`
+                            : `/${locale}/admin/orders`
+          }
+
+      className={styles.navItem}
+      activeClassName={styles.navActive}
+      indicatorClassName={styles.activeIndicator}
+    >
+      <SidebarIcon name={item.icon} />
+      <span>{item.label}</span>
+    </ActiveAdminLink>
+  ) : (
+    <div
+      key={item.label}
+      className={`${styles.navItem} ${styles.navDisabled}`}
+      title={t.comingSoon}
+    >
+      <SidebarIcon name={item.icon} />
+      <span>{item.label}</span>
+      <small>{t.comingSoon}</small>
+    </div>
+  )
+)}
+
+
 
               </div>
 

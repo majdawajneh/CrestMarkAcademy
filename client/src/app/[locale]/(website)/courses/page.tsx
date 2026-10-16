@@ -5,6 +5,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import styles from "./page.module.css";
 
+
+
+export const instant = false;
+
 type Locale = "en" | "ar";
 
 type Course = {

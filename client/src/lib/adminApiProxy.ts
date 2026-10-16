@@ -6,7 +6,7 @@ const API_URL = (
   process.env.API_BASE_URL || "http://localhost:5299"
 ).replace(/\/+$/, "");
 
-type Method = "GET" | "POST" | "PATCH" | "DELETE";
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export function parsePositiveId(value: string): number | null {
   if (!/^[1-9]\d*$/.test(value)) return null;
@@ -27,7 +27,8 @@ export function invalidAdminRoute() {
 
 export async function proxyAdminApi(
   method: Method,
-  backendPath: string
+  backendPath: string,
+  payload?: unknown
 ) {
   const token = (await cookies()).get("cm_access")?.value;
 
@@ -39,12 +40,20 @@ export async function proxyAdminApi(
   }
 
   try {
+    const hasBody = payload !== undefined;
+
     const response = await fetch(`${API_URL}${backendPath}`, {
       method,
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
+        ...(hasBody
+          ? { "Content-Type": "application/json" }
+          : {}),
       },
+      ...(hasBody
+        ? { body: JSON.stringify(payload) }
+        : {}),
       cache: "no-store",
       signal: AbortSignal.timeout(15000),
     });
@@ -57,7 +66,6 @@ export async function proxyAdminApi(
     }
 
     const raw = await response.text();
-
     let result: unknown;
 
     try {

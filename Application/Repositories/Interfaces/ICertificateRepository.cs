@@ -1,34 +1,30 @@
-﻿using Domain.Entities.Learning;
+﻿
+using Domain.Entities.Learning;
 
 namespace Application.Repositories.Interfaces
 {
     public interface ICertificateRepository
     {
-        Task<Certificate?>
-            GetByIdWithDetailsAsync(int id);
+        // Get all certificates with student and course details
+        Task<IEnumerable<Certificate>> GetAllWithDetailsAsync();
 
+        // Get certificate by ID
+        Task<Certificate?> GetByIdWithDetailsAsync(int id);
 
-        Task<Certificate?>
-            GetByEnrollmentIdWithDetailsAsync(
-                int enrollmentId
-            );
+        // Get certificate by enrollment
+        Task<Certificate?> GetByEnrollmentIdWithDetailsAsync(
+            int enrollmentId);
 
+        // Get certificate by certificate number
+        Task<Certificate?> GetByCertificateNumberWithDetailsAsync(
+            string certificateNumber);
 
-        Task<Certificate?>
-            GetByCertificateNumberWithDetailsAsync(
-                string certificateNumber
-            );
+        // Get certificates belonging to one student
+        Task<IEnumerable<Certificate>> GetByUserIdWithDetailsAsync(
+            int userId);
 
-
-        Task<IEnumerable<Certificate>>
-            GetByUserIdWithDetailsAsync(
-                int userId
-            );
-
-
-        Task<bool>
-            CertificateNumberExistsAsync(
-                string certificateNumber
-            );
+        // Check certificate number uniqueness
+        Task<bool> CertificateNumberExistsAsync(
+            string certificateNumber);
     }
 }

@@ -111,12 +111,12 @@ const translations = {
     coupon: "Coupon code",
     none: "None",
     orderItems: "Purchased courses",
+    orderTotal: "Order total",
     unitPrice: "Original price",
     itemDiscount: "Discount",
     itemTotal: "Final price",
     subtotal: "Subtotal",
     discount: "Total discount",
-    total: "Order total",
     payments: "Payment records",
     paymentCount: "Payment records",
     noPayments: "No payment records for this order.",
@@ -149,6 +149,7 @@ const translations = {
     subtitle:
       "راجع مشتريات الطلاب وتفاصيل الفواتير وسجلات الدفع وحالات الطلبات.",
     total: "إجمالي الطلبات",
+    orderTotal: "الإجمالي النهائي",
     paid: "الطلبات المدفوعة",
     open: "قيد المعالجة",
     cancelled: "الطلبات الملغاة",
@@ -202,7 +203,6 @@ const translations = {
     itemTotal: "السعر النهائي",
     subtotal: "الإجمالي قبل الخصم",
     discount: "إجمالي الخصم",
-    total: "الإجمالي النهائي",
     payments: "سجلات الدفع",
     paymentCount: "عدد عمليات الدفع",
     noPayments: "لا توجد سجلات دفع مرتبطة بهذا الطلب.",
@@ -1373,7 +1373,7 @@ export default function AdminOrdersPage() {
                         </strong>
                       </div>
                       <div className={styles.billTotal}>
-                        <span>{t.total}</span>
+                        <span>{t.orderTotal}</span>
                         <strong>
                           {money(
                             details.totalAmount,

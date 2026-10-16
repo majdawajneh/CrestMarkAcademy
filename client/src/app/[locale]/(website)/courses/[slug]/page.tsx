@@ -621,12 +621,12 @@ async function CourseDetailsContent({
             <div className={styles.sidebarColumn}>
               <EnrollmentCard
                 locale={locale}
+                courseId={course.id}
+                slug={course.slug}
                 price={course.price}
                 discountPrice={course.discountPrice}
                 hasCertificate={course.hasCertificate}
-                estimatedDurationHours={
-                  course.estimatedDurationHours
-                }
+                estimatedDurationHours={course.estimatedDurationHours}
               />
 
               <aside className={styles.sidebar}>

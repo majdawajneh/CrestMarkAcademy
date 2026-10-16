@@ -188,8 +188,7 @@ export default function Footer({ locale }: Props) {
 
         <div className={styles.bottom}>
           <p>
-            © {new Date().getFullYear()} CrestMark Academy.
-            {" "}
+            © 2026 CrestMark Academy.{" "}
             {t.copyright}
           </p>
 

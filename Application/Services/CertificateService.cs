@@ -70,6 +70,22 @@ namespace Application.Services
 
 
         // =========================
+        // Get All Certificates
+        // Admin
+        // =========================
+
+        public async Task<IEnumerable<CertificateDetailsDto>>
+            GetAllAsync()
+        {
+            var certificates = await _certificateDetailsRepo
+                .GetAllWithDetailsAsync();
+
+            return certificates
+                .Select(MapToDetailsDto)
+                .ToList();
+        }
+
+        // =========================
         // Get Certificate By Id
         // =========================
 

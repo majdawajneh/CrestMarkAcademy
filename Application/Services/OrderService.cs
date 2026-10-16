@@ -1,4 +1,5 @@
-﻿using Application.Dto_s.Order;
+﻿
+using Application.Dto_s.Order;
 using Application.Repositories.Interfaces;
 using Application.Services.Interfaces;
 using Domain.Entities.Catalog;
@@ -15,23 +16,12 @@ namespace Application.Services
     public class OrderService : IOrderService
     {
         private readonly IGenericRepository<OrderEntity> _orderRepo;
-
         private readonly IOrderRepository _orderDetailsRepo;
-
         private readonly IGenericRepository<User> _userRepo;
-
         private readonly IGenericRepository<Course> _courseRepo;
-
         private readonly IEnrollmentRepository _enrollmentRepo;
-
         private readonly IGenericRepository<Coupon> _couponRepo;
-
         private readonly IGenericRepository<CouponCourse> _couponCourseRepo;
-
-
-        // =========================
-        // Constructor
-        // =========================
 
         public OrderService(
             IGenericRepository<OrderEntity> orderRepo,
@@ -43,476 +33,334 @@ namespace Application.Services
             IGenericRepository<CouponCourse> couponCourseRepo)
         {
             _orderRepo = orderRepo;
-
             _orderDetailsRepo = orderDetailsRepo;
-
             _userRepo = userRepo;
-
             _courseRepo = courseRepo;
-
             _enrollmentRepo = enrollmentRepo;
-
             _couponRepo = couponRepo;
-
             _couponCourseRepo = couponCourseRepo;
         }
-
 
         // =========================
         // Create Order
         // =========================
 
-        public async Task<OrderDto>
-            CreateAsync(
-                int userId,
-                CreateOrderDto dto)
+        public async Task<OrderDto> CreateAsync(
+            int userId,
+            CreateOrderDto dto)
         {
-            // =========================
             // Validate User
-            // =========================
-
-            var user =
-                await _userRepo
-                    .GetByIdAsync(userId);
+            var user = await _userRepo.GetByIdAsync(userId);
 
             if (user == null)
             {
                 throw new KeyNotFoundException(
-                    "User was not found."
-                );
+                    "User was not found.");
             }
 
+            // Validate Course IDs
+            if (dto.CourseIds == null || dto.CourseIds.Count == 0)
+            {
+                throw new ArgumentException(
+                    "At least one course is required.");
+            }
+
+            if (dto.CourseIds.Any(id => id <= 0))
+            {
+                throw new ArgumentException(
+                    "Invalid course id.");
+            }
+
+            var distinctCourseIds = dto.CourseIds
+                .Distinct()
+                .ToList();
+
+            if (distinctCourseIds.Count != dto.CourseIds.Count)
+            {
+                throw new InvalidOperationException(
+                    "The same course cannot be added more than once.");
+            }
+
+            var courses = new List<Course>();
 
             // =========================
             // Validate Courses
             // =========================
 
-            if (dto.CourseIds == null ||
-                dto.CourseIds.Count == 0)
+            foreach (var courseId in distinctCourseIds)
             {
-                throw new ArgumentException(
-                    "At least one course is required."
-                );
-            }
-
-
-            if (dto.CourseIds.Any(id => id <= 0))
-            {
-                throw new ArgumentException(
-                    "Invalid course id."
-                );
-            }
-
-
-            var distinctCourseIds =
-                dto.CourseIds
-                    .Distinct()
-                    .ToList();
-
-
-            if (distinctCourseIds.Count !=
-                dto.CourseIds.Count)
-            {
-                throw new InvalidOperationException(
-                    "The same course cannot be added more than once."
-                );
-            }
-
-
-            var courses =
-                new List<Course>();
-
-
-            foreach (var courseId
-                     in distinctCourseIds)
-            {
-                var course =
-                    await _courseRepo
-                        .GetByIdAsync(courseId);
-
+                var course = await _courseRepo
+                    .GetByIdAsync(courseId);
 
                 if (course == null)
                 {
                     throw new KeyNotFoundException(
-                        $"Course with id {courseId} was not found."
-                    );
+                        $"Course with id {courseId} was not found.");
                 }
-
 
                 if (!string.Equals(
-                        course.Status,
-                        "Published",
-                        StringComparison.OrdinalIgnoreCase))
+                    course.Status,
+                    "Published",
+                    StringComparison.OrdinalIgnoreCase))
                 {
                     throw new InvalidOperationException(
-                        $"Course '{course.Title}' is not available for purchase."
-                    );
+                        $"Course '{course.Title}' is not available for purchase.");
                 }
 
-
-                // =========================
                 // Check Existing Enrollment
-                // =========================
-
-                var enrollment =
-                    await _enrollmentRepo
-                        .GetByUserAndCourseAsync(
-                            userId,
-                            courseId
-                        );
-
+                var enrollment = await _enrollmentRepo
+                    .GetByUserAndCourseAsync(userId, courseId);
 
                 if (enrollment != null &&
                     (
                         string.Equals(
                             enrollment.Status,
                             "Active",
-                            StringComparison.OrdinalIgnoreCase
-                        )
+                            StringComparison.OrdinalIgnoreCase)
                         ||
                         string.Equals(
                             enrollment.Status,
                             "Completed",
-                            StringComparison.OrdinalIgnoreCase
-                        )
+                            StringComparison.OrdinalIgnoreCase)
                     ))
                 {
                     throw new InvalidOperationException(
-                        $"You are already enrolled in '{course.Title}'."
-                    );
+                        $"You are already enrolled in '{course.Title}'.");
                 }
-
 
                 courses.Add(course);
             }
 
-
             // =========================
             // Create Order Items
-            // Before Coupon
             // =========================
 
-            var orderItems =
-                new List<OrderItem>();
+            var orderItems = new List<OrderItem>();
 
+            // Courses already discounted are excluded
+            // from additional coupon discounts.
+            var discountedCourseIds = new HashSet<int>();
 
             foreach (var course in courses)
             {
                 decimal unitPrice =
-                    course.DiscountPrice
-                    ?? course.Price;
-
+                    course.DiscountPrice ?? course.Price;
 
                 if (unitPrice < 0)
                 {
                     throw new InvalidOperationException(
-                        $"Course '{course.Title}' has an invalid price."
-                    );
+                        $"Course '{course.Title}' has an invalid price.");
                 }
 
+                // A real course discount exists only
+                // when DiscountPrice < Price.
+                if (course.DiscountPrice.HasValue &&
+                    course.DiscountPrice.Value < course.Price)
+                {
+                    discountedCourseIds.Add(course.Id);
+                }
 
-                var item =
-                    new OrderItem
-                    {
-                        CourseId = course.Id,
+                var roundedPrice = RoundMoney(unitPrice);
 
-                        CourseTitle =
-                            course.Title,
-
-                        UnitPrice =
-                            RoundMoney(unitPrice),
-
-                        DiscountAmount = 0,
-
-                        FinalPrice =
-                            RoundMoney(unitPrice)
-                    };
-
+                var item = new OrderItem
+                {
+                    CourseId = course.Id,
+                    CourseTitle = course.Title,
+                    UnitPrice = roundedPrice,
+                    DiscountAmount = 0,
+                    FinalPrice = roundedPrice
+                };
 
                 orderItems.Add(item);
             }
 
-
             // =========================
-            // Coupon
+            // Validate And Apply Coupon
             // =========================
 
             Coupon? coupon = null;
 
-
-            if (!string.IsNullOrWhiteSpace(
-                    dto.CouponCode))
+            if (!string.IsNullOrWhiteSpace(dto.CouponCode))
             {
-                coupon =
-                    await GetValidCouponAsync(
-                        dto.CouponCode
-                    );
+                coupon = await GetValidCouponAsync(
+                    dto.CouponCode);
 
-
+                // Apply the coupon only to eligible
+                // courses without existing discounts.
                 await ApplyCouponAsync(
                     coupon,
-                    orderItems
-                );
+                    orderItems,
+                    discountedCourseIds);
             }
 
-
             // =========================
-            // Calculate Totals
+            // Calculate Order Totals
             // =========================
 
-            decimal subtotal =
-                RoundMoney(
-                    orderItems.Sum(
-                        i => i.UnitPrice
-                    )
-                );
+            decimal subtotal = RoundMoney(
+                orderItems.Sum(i => i.UnitPrice));
 
+            decimal discountAmount = RoundMoney(
+                orderItems.Sum(i => i.DiscountAmount));
 
-            decimal discountAmount =
-                RoundMoney(
-                    orderItems.Sum(
-                        i => i.DiscountAmount
-                    )
-                );
-
-
-            decimal totalAmount =
-                RoundMoney(
-                    orderItems.Sum(
-                        i => i.FinalPrice
-                    )
-                );
-
+            decimal totalAmount = RoundMoney(
+                orderItems.Sum(i => i.FinalPrice));
 
             if (totalAmount < 0)
             {
                 totalAmount = 0;
             }
 
-
             // =========================
             // Generate Order Number
             // =========================
 
-            var orderNumber =
-                await GenerateOrderNumberAsync();
-
+            var orderNumber = await GenerateOrderNumberAsync();
 
             // =========================
-            // Create Order
+            // Create Order Entity
             // =========================
 
-            var order =
-                new OrderEntity
-                {
-                    UserId = userId,
+            var order = new OrderEntity
+            {
+                UserId = userId,
+                OrderNumber = orderNumber,
+                Subtotal = subtotal,
+                DiscountAmount = discountAmount,
+                TotalAmount = totalAmount,
+                Currency = "JOD",
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow,
+                CouponId = coupon?.Id,
+                OrderItems = orderItems
+            };
 
-                    OrderNumber =
-                        orderNumber,
+            await _orderRepo.AddAsync(order);
+            await _orderRepo.SaveChangesAsync();
 
-                    Subtotal =
-                        subtotal,
-
-                    DiscountAmount =
-                        discountAmount,
-
-                    TotalAmount =
-                        totalAmount,
-
-                    Currency = "JOD",
-
-                    Status = "Pending",
-
-                    CreatedAt =
-                        DateTime.UtcNow,
-
-                    CouponId =
-                        coupon?.Id,
-
-                    OrderItems =
-                        orderItems
-                };
-
-
-            await _orderRepo
-                .AddAsync(order);
-
-
-            await _orderRepo
-                .SaveChangesAsync();
-
-
-            // =========================
-            // Reload Details
-            // =========================
-
-            var createdOrder =
-                await _orderDetailsRepo
-                    .GetByIdWithDetailsAsync(
-                        order.Id
-                    );
-
+            // Reload Full Order Details
+            var createdOrder = await _orderDetailsRepo
+                .GetByIdWithDetailsAsync(order.Id);
 
             if (createdOrder == null)
             {
                 throw new InvalidOperationException(
-                    "Order was created but could not be loaded."
-                );
+                    "Order was created but could not be loaded.");
             }
-
 
             return MapToDto(createdOrder);
         }
-
 
         // =========================
         // Get My Orders
         // =========================
 
-        public async Task<IEnumerable<OrderDto>>
-            GetMyOrdersAsync(int userId)
+        public async Task<IEnumerable<OrderDto>> GetMyOrdersAsync(
+            int userId)
         {
-            var orders =
-                await _orderDetailsRepo
-                    .GetByUserIdWithDetailsAsync(
-                        userId
-                    );
-
+            var orders = await _orderDetailsRepo
+                .GetByUserIdWithDetailsAsync(userId);
 
             return orders
                 .Select(MapToDto)
                 .ToList();
         }
 
-
         // =========================
-        // Get My Order By Id
+        // Get My Order By ID
         // =========================
 
-        public async Task<OrderDto>
-            GetMyOrderByIdAsync(
-                int userId,
-                int orderId)
+        public async Task<OrderDto> GetMyOrderByIdAsync(
+            int userId,
+            int orderId)
         {
-            var order =
-                await _orderDetailsRepo
-                    .GetByIdWithDetailsAsync(
-                        orderId
-                    );
+            var order = await _orderDetailsRepo
+                .GetByIdWithDetailsAsync(orderId);
 
-
-            if (order == null ||
-                order.UserId != userId)
+            if (order == null || order.UserId != userId)
             {
                 throw new KeyNotFoundException(
-                    "Order was not found."
-                );
+                    "Order was not found.");
             }
-
 
             return MapToDto(order);
         }
-
 
         // =========================
         // Get And Validate Coupon
         // =========================
 
-        private async Task<Coupon>
-            GetValidCouponAsync(
-                string couponCode)
+        private async Task<Coupon> GetValidCouponAsync(
+            string couponCode)
         {
-            var code =
-                couponCode.Trim();
+            var code = couponCode.Trim();
 
-
-            var coupon =
-                await _couponRepo
-                    .FirstOrDefaultAsync(
-                        c => c.Code == code
-                    );
-
+            var coupon = await _couponRepo
+                .FirstOrDefaultAsync(c => c.Code == code);
 
             if (coupon == null)
             {
                 throw new InvalidOperationException(
-                    "Coupon code is invalid."
-                );
+                    "Coupon code is invalid.");
             }
-
 
             if (!coupon.IsActive)
             {
                 throw new InvalidOperationException(
-                    "Coupon is not active."
-                );
+                    "Coupon is not active.");
             }
 
-
-            var now =
-                DateTime.UtcNow;
-
+            var now = DateTime.UtcNow;
 
             if (now < coupon.StartDate)
             {
                 throw new InvalidOperationException(
-                    "Coupon is not active yet."
-                );
+                    "Coupon is not active yet.");
             }
-
 
             if (now > coupon.EndDate)
             {
                 throw new InvalidOperationException(
-                    "Coupon has expired."
-                );
+                    "Coupon has expired.");
             }
-
 
             if (coupon.UsageLimit.HasValue &&
-                coupon.UsedCount >=
-                coupon.UsageLimit.Value)
+                coupon.UsedCount >= coupon.UsageLimit.Value)
             {
                 throw new InvalidOperationException(
-                    "Coupon usage limit has been reached."
-                );
+                    "Coupon usage limit has been reached.");
             }
-
 
             if (coupon.DiscountValue <= 0)
             {
                 throw new InvalidOperationException(
-                    "Coupon discount value is invalid."
-                );
+                    "Coupon discount value is invalid.");
             }
 
-
+            // Percentage Coupon Validation
             if (string.Equals(
-                    coupon.DiscountType,
-                    "Percentage",
-                    StringComparison.OrdinalIgnoreCase))
+                coupon.DiscountType,
+                "Percentage",
+                StringComparison.OrdinalIgnoreCase))
             {
                 if (coupon.DiscountValue > 100)
                 {
                     throw new InvalidOperationException(
-                        "Percentage coupon cannot exceed 100%."
-                    );
+                        "Percentage coupon cannot exceed 100%.");
                 }
             }
+            // Fixed Coupon Validation
             else if (!string.Equals(
-                         coupon.DiscountType,
-                         "Fixed",
-                         StringComparison.OrdinalIgnoreCase))
+                coupon.DiscountType,
+                "Fixed",
+                StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidOperationException(
-                    "Coupon discount type is invalid."
-                );
+                    "Coupon discount type is invalid.");
             }
-
 
             return coupon;
         }
-
 
         // =========================
         // Apply Coupon
@@ -520,236 +368,159 @@ namespace Application.Services
 
         private async Task ApplyCouponAsync(
             Coupon coupon,
-            List<OrderItem> orderItems)
+            List<OrderItem> orderItems,
+            HashSet<int> discountedCourseIds)
         {
-            var couponCourses =
-                (
-                    await _couponCourseRepo
-                        .FindAsync(
-                            cc =>
-                                cc.CouponId ==
-                                coupon.Id
-                        )
+            var couponCourses = (
+                await _couponCourseRepo.FindAsync(
+                    cc => cc.CouponId == coupon.Id)
+            ).ToList();
+
+            // No CouponCourse records means
+            // the coupon applies to all courses.
+            bool isGlobalCoupon = couponCourses.Count == 0;
+
+            var allowedCourseIds = couponCourses
+                .Select(cc => cc.CourseId)
+                .ToHashSet();
+
+            // =========================
+            // Find Eligible Courses
+            // =========================
+
+            var eligibleItems = orderItems
+                .Where(item =>
+                    // Do not stack discounts.
+                    !discountedCourseIds.Contains(item.CourseId)
+                    &&
+                    // Respect coupon course restrictions.
+                    (
+                        isGlobalCoupon ||
+                        allowedCourseIds.Contains(item.CourseId)
+                    )
                 )
                 .ToList();
-
-
-            // If CouponCourse is empty:
-            // Coupon applies to all courses.
-
-            bool isGlobalCoupon =
-                couponCourses.Count == 0;
-
-
-            var allowedCourseIds =
-                couponCourses
-                    .Select(
-                        cc => cc.CourseId
-                    )
-                    .ToHashSet();
-
-
-            var eligibleItems =
-                orderItems
-                    .Where(
-                        item =>
-                            isGlobalCoupon
-                            ||
-                            allowedCourseIds.Contains(
-                                item.CourseId
-                            )
-                    )
-                    .ToList();
-
 
             if (eligibleItems.Count == 0)
             {
                 throw new InvalidOperationException(
-                    "This coupon does not apply to the selected courses."
-                );
+                    "This coupon cannot be applied because no eligible " +
+                    "full-price courses were selected.");
             }
-
 
             // =========================
             // Percentage Coupon
             // =========================
 
             if (string.Equals(
-                    coupon.DiscountType,
-                    "Percentage",
-                    StringComparison.OrdinalIgnoreCase))
+                coupon.DiscountType,
+                "Percentage",
+                StringComparison.OrdinalIgnoreCase))
             {
-                foreach (var item
-                         in eligibleItems)
+                foreach (var item in eligibleItems)
                 {
-                    var discount =
-                        RoundMoney(
-                            item.UnitPrice
-                            *
-                            coupon.DiscountValue
-                            /
-                            100m
-                        );
+                    var discount = RoundMoney(
+                        item.UnitPrice
+                        *
+                        coupon.DiscountValue
+                        /
+                        100m);
 
+                    // Never discount more than the price.
+                    discount = Math.Min(
+                        discount,
+                        item.UnitPrice);
 
-                    discount =
-                        Math.Min(
-                            discount,
-                            item.UnitPrice
-                        );
+                    item.DiscountAmount = discount;
 
-
-                    item.DiscountAmount =
-                        discount;
-
-
-                    item.FinalPrice =
-                        RoundMoney(
-                            item.UnitPrice
-                            -
-                            discount
-                        );
+                    item.FinalPrice = RoundMoney(
+                        item.UnitPrice - discount);
                 }
-
 
                 return;
             }
-
 
             // =========================
             // Fixed Coupon
             // =========================
 
-            decimal eligibleSubtotal =
-                RoundMoney(
-                    eligibleItems.Sum(
-                        i => i.UnitPrice
-                    )
-                );
-
+            decimal eligibleSubtotal = RoundMoney(
+                eligibleItems.Sum(i => i.UnitPrice));
 
             if (eligibleSubtotal <= 0)
             {
                 throw new InvalidOperationException(
-                    "Coupon cannot be applied to these courses."
-                );
+                    "Coupon cannot be applied to these courses.");
             }
 
-
-            decimal totalFixedDiscount =
+            // Never exceed the eligible subtotal.
+            decimal totalFixedDiscount = RoundMoney(
                 Math.Min(
                     coupon.DiscountValue,
-                    eligibleSubtotal
-                );
+                    eligibleSubtotal));
 
+            decimal remainingDiscount = totalFixedDiscount;
 
-            totalFixedDiscount =
-                RoundMoney(
-                    totalFixedDiscount
-                );
-
-
-            decimal remainingDiscount =
-                totalFixedDiscount;
-
-
-            for (int i = 0;
-                 i < eligibleItems.Count;
-                 i++)
+            // Distribute fixed discount proportionally.
+            for (int i = 0; i < eligibleItems.Count; i++)
             {
-                var item =
-                    eligibleItems[i];
-
+                var item = eligibleItems[i];
 
                 decimal itemDiscount;
 
-
-                // Last item gets remaining cents
-                // to avoid rounding difference.
-
-                if (i ==
-                    eligibleItems.Count - 1)
+                // Last eligible item gets remaining cents
+                // to avoid rounding differences.
+                if (i == eligibleItems.Count - 1)
                 {
-                    itemDiscount =
-                        remainingDiscount;
+                    itemDiscount = remainingDiscount;
                 }
                 else
                 {
-                    itemDiscount =
-                        RoundMoney(
-                            totalFixedDiscount
-                            *
-                            item.UnitPrice
-                            /
-                            eligibleSubtotal
-                        );
+                    itemDiscount = RoundMoney(
+                        totalFixedDiscount
+                        *
+                        item.UnitPrice
+                        /
+                        eligibleSubtotal);
 
-
-                    itemDiscount =
-                        Math.Min(
-                            itemDiscount,
-                            remainingDiscount
-                        );
+                    itemDiscount = Math.Min(
+                        itemDiscount,
+                        remainingDiscount);
                 }
 
+                // Do not exceed the item's unit price.
+                itemDiscount = Math.Min(
+                    itemDiscount,
+                    item.UnitPrice);
 
-                itemDiscount =
-                    Math.Min(
-                        itemDiscount,
-                        item.UnitPrice
-                    );
+                item.DiscountAmount = itemDiscount;
 
+                item.FinalPrice = RoundMoney(
+                    item.UnitPrice - itemDiscount);
 
-                item.DiscountAmount =
-                    itemDiscount;
-
-
-                item.FinalPrice =
-                    RoundMoney(
-                        item.UnitPrice
-                        -
-                        itemDiscount
-                    );
-
-
-                remainingDiscount =
-                    RoundMoney(
-                        remainingDiscount
-                        -
-                        itemDiscount
-                    );
+                remainingDiscount = RoundMoney(
+                    remainingDiscount - itemDiscount);
             }
         }
 
-
         // =========================
-        // Generate Order Number
+        // Generate Unique Order Number
         // =========================
 
-        private async Task<string>
-            GenerateOrderNumberAsync()
+        private async Task<string> GenerateOrderNumberAsync()
         {
-            for (int attempt = 0;
-                 attempt < 10;
-                 attempt++)
+            for (int attempt = 0; attempt < 10; attempt++)
             {
-                var randomPart =
-                    Guid.NewGuid()
-                        .ToString("N")
-                        .Substring(0, 8)
-                        .ToUpperInvariant();
-
+                var randomPart = Guid.NewGuid()
+                    .ToString("N")
+                    .Substring(0, 8)
+                    .ToUpperInvariant();
 
                 var orderNumber =
                     $"CMA-ORD-{DateTime.UtcNow.Year}-{randomPart}";
 
-
-                var exists =
-                    await _orderDetailsRepo
-                        .OrderNumberExistsAsync(
-                            orderNumber
-                        );
-
+                var exists = await _orderDetailsRepo
+                    .OrderNumberExistsAsync(orderNumber);
 
                 if (!exists)
                 {
@@ -757,96 +528,54 @@ namespace Application.Services
                 }
             }
 
-
             throw new InvalidOperationException(
-                "Could not generate a unique order number."
-            );
+                "Could not generate a unique order number.");
         }
 
-
         // =========================
-        // Map Order
+        // Map Order Entity To DTO
         // =========================
 
-        private static OrderDto MapToDto(
-            OrderEntity order)
+        private static OrderDto MapToDto(OrderEntity order)
         {
             return new OrderDto
             {
                 Id = order.Id,
+                OrderNumber = order.OrderNumber,
+                UserId = order.UserId,
+                Subtotal = order.Subtotal,
+                DiscountAmount = order.DiscountAmount,
+                TotalAmount = order.TotalAmount,
+                Currency = order.Currency,
+                Status = order.Status,
+                CouponCode = order.Coupon?.Code,
+                CreatedAt = order.CreatedAt,
+                PaidAt = order.PaidAt,
 
-                OrderNumber =
-                    order.OrderNumber,
-
-                UserId =
-                    order.UserId,
-
-                Subtotal =
-                    order.Subtotal,
-
-                DiscountAmount =
-                    order.DiscountAmount,
-
-                TotalAmount =
-                    order.TotalAmount,
-
-                Currency =
-                    order.Currency,
-
-                Status =
-                    order.Status,
-
-                CouponCode =
-                    order.Coupon?.Code,
-
-                CreatedAt =
-                    order.CreatedAt,
-
-                PaidAt =
-                    order.PaidAt,
-
-                Items =
-                    order.OrderItems
-                        .Select(
-                            item =>
-                                new OrderItemDto
-                                {
-                                    Id =
-                                        item.Id,
-
-                                    CourseId =
-                                        item.CourseId,
-
-                                    CourseTitle =
-                                        item.CourseTitle,
-
-                                    UnitPrice =
-                                        item.UnitPrice,
-
-                                    DiscountAmount =
-                                        item.DiscountAmount,
-
-                                    FinalPrice =
-                                        item.FinalPrice
-                                }
-                        )
-                        .ToList()
+                Items = order.OrderItems
+                    .Select(item => new OrderItemDto
+                    {
+                        Id = item.Id,
+                        CourseId = item.CourseId,
+                        CourseTitle = item.CourseTitle,
+                        UnitPrice = item.UnitPrice,
+                        DiscountAmount = item.DiscountAmount,
+                        FinalPrice = item.FinalPrice
+                    })
+                    .ToList()
             };
         }
-
 
         // =========================
         // Money Rounding
         // =========================
 
-        private static decimal RoundMoney(
-            decimal value)
+        private static decimal RoundMoney(decimal value)
         {
             return Math.Round(
                 value,
                 2,
-                MidpointRounding.AwayFromZero
-            );
+                MidpointRounding.AwayFromZero);
         }
     }
 }

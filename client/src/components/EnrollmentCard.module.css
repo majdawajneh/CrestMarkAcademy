@@ -257,3 +257,50 @@
     transition: none !important;
   }
 }
+
+/* Checkout enrollment link */
+
+.enrollButton {
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.enrollButton:not(:disabled):hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.enrollButton:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+/* Enrollment status actions */
+
+.enrollButton {
+  text-decoration: none;
+  text-align: center;
+}
+
+.enrollButton.ownedButton {
+  background: #167b65;
+  border-color: #167b65;
+  color: #ffffff;
+}
+
+.enrollButton.ownedButton:not(:disabled):hover {
+  background: #116650;
+  border-color: #116650;
+  color: #ffffff;
+}
+
+.enrollButton:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
