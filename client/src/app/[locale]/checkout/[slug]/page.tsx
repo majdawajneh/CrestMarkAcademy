@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import {
   useEffect,
   useState,
+  Suspense,
   type FormEvent,
 } from "react";
 
@@ -42,7 +43,7 @@ type SessionStatus =
   | "unavailable";
 
 const CURRENCY = "USD";
-
+const PAYMENTS_ENABLED = false;
 const words = {
   en: {
     breadcrumb: "Courses",
@@ -108,6 +109,14 @@ const words = {
       "No additional coupon discount was applied.",
     notReady:
       "Payment cannot proceed until the course price and currency are verified.",
+    payDisabled: "Secure payment coming soon",
+    existingOrder: "Your existing pending order",
+  existingOrderInfo:
+    "We found your pending order. Its price and coupon are already saved.",
+  checkingOrders: "Checking your existing orders...",
+  ordersCheckError: "Couldn't check your existing orders. Please retry.",
+  retryOrders: "Try again",
+  viewOrders: "View order details",
   },
   ar: {
     breadcrumb: "الدورات",
@@ -171,6 +180,14 @@ const words = {
     noCouponDiscount: "لم يتم تطبيق خصم كوبون إضافي.",
     notReady:
       "لا يمكن متابعة الدفع قبل التحقق من السعر والعملة.",
+    payDisabled: "الدفع الإلكتروني غير متاح حاليًا",
+    existingOrder: "طلبك المعلّق الحالي",
+  existingOrderInfo:
+    "وجدنا طلبك المعلّق. السعر والكوبون محفوظان مسبقًا.",
+  checkingOrders: "جاري التحقق من طلباتك السابقة...",
+  ordersCheckError: "تعذر التحقق من طلباتك. حاول مجددًا.",
+  retryOrders: "إعادة المحاولة",
+  viewOrders: "عرض تفاصيل الطلب",
   },
 } as const;
 
@@ -309,11 +326,13 @@ function formatAmount(
   ).format(value);
 }
 
-export default function CheckoutPage() {
+
+function CheckoutContent() {
   const params = useParams<{
     locale: string;
     slug: string;
   }>();
+
 
   const locale: Locale = params.locale === "ar" ? "ar" : "en";
   const slug = params.slug;
@@ -332,6 +351,18 @@ export default function CheckoutPage() {
   const [creating, setCreating] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
+
+  
+const [pendingCheck, setPendingCheck] = useState<
+  "checking" | "ready" | "error"
+>("checking");
+
+const [checkedCourseId, setCheckedCourseId] =
+  useState<number | null>(null);
+
+const [existingPending, setExistingPending] = useState(false);
+
+const [pendingRetry, setPendingRetry] = useState(0);
 
   const returnPath =
     `/${locale}/courses/${encodeURIComponent(slug)}`;
@@ -417,6 +448,135 @@ export default function CheckoutPage() {
     return () => controller.abort();
   }, [slug, t.courseError, t.invalid]);
 
+  
+// ========================================
+// Detect Existing Pending USD Order
+// ========================================
+
+useEffect(() => {
+  if (
+    session !== "authenticated" ||
+    !course ||
+    loadingCourse ||
+    course.slug !== slug
+  ) {
+    return;
+  }
+
+  const controller = new AbortController();
+
+  async function checkExistingOrders() {
+    setPendingCheck("checking");
+    setCheckedCourseId(null);
+
+    try {
+      const requestOrders = () =>
+        fetch("/api/orders/my", {
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: controller.signal,
+        });
+
+      let response = await requestOrders();
+
+      if (response.status === 401) {
+        const currentSession =
+          await getCurrentSession();
+
+        if (controller.signal.aborted) return;
+
+        if (currentSession.status === "guest") {
+          setSession("guest");
+          return;
+        }
+
+        if (currentSession.status !== "authenticated") {
+          throw new Error("Session unavailable.");
+        }
+
+        response = await requestOrders();
+      }
+
+      if (!response.ok) {
+        throw new Error("Unable to load orders.");
+      }
+
+      const data: unknown = await response.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid orders response.");
+      }
+
+      // Find a pending USD order containing this course.
+      const existing = data.find((entry: unknown) => {
+        if (
+          !isObject(entry) ||
+          typeof entry.status !== "string" ||
+          typeof entry.currency !== "string" ||
+          !Array.isArray(entry.items)
+        ) {
+          return false;
+        }
+
+        return (
+          entry.status.toLowerCase() === "pending" &&
+          entry.currency.toUpperCase() === CURRENCY &&
+          entry.items.some(
+            (item: unknown) =>
+              isObject(item) &&
+              item.courseId === course.id
+          )
+        );
+      });
+
+      const savedOrder = existing
+        ? parseOrder(existing)
+        : null;
+
+      if (existing && !savedOrder) {
+        throw new Error("Invalid saved order.");
+      }
+
+      if (controller.signal.aborted) return;
+
+      if (savedOrder) {
+        // Display the original saved amount.
+        // Do not recalculate an existing order.
+        setOrder(savedOrder);
+
+        setCouponCode(
+          typeof existing.couponCode === "string"
+            ? existing.couponCode
+            : ""
+        );
+
+        setExistingPending(true);
+      } else {
+        setExistingPending(false);
+      }
+
+      setCheckedCourseId(course.id);
+      setPendingCheck("ready");
+    } catch {
+      if (!controller.signal.aborted) {
+        setPendingCheck("error");
+      }
+    }
+  }
+
+  void checkExistingOrders();
+
+  return () => controller.abort();
+}, [
+  session,
+  course,
+  loadingCourse,
+  slug,
+  pendingRetry,
+]);
+
+
   const hasDiscount =
     course !== null &&
     course.discountPrice !== null &&
@@ -450,7 +610,9 @@ export default function CheckoutPage() {
       !payable ||
       creating ||
       order ||
-      session !== "authenticated"
+      session !== "authenticated"||
+      pendingCheck !== "ready" ||
+      checkedCourseId !== course.id
     ) {
       return;
     }
@@ -500,6 +662,7 @@ export default function CheckoutPage() {
 
   async function startPayment() {
     if (
+      !PAYMENTS_ENABLED ||
       !order ||
       paying ||
       !orderCurrencyMatches ||
@@ -655,6 +818,35 @@ export default function CheckoutPage() {
                 {order && (
                   <p className={styles.lockedNote}>{t.locked}</p>
                 )}
+                
+
+                
+                {session === "authenticated" &&
+                  !order &&
+                  pendingCheck === "checking" && (
+                    <p className={styles.sessionNote}>
+                      {t.checkingOrders}
+                    </p>
+                  )}
+
+                {session === "authenticated" &&
+                  !order &&
+                  pendingCheck === "error" && (
+                    <div className={styles.alert} role="alert">
+                      <p>{t.ordersCheckError}</p>
+
+                      <button
+                        type="button"
+                        className={styles.primaryButton}
+                        onClick={() =>
+                          setPendingRetry((value) => value + 1)
+                        }
+                      >
+                        {t.retryOrders}
+                      </button>
+                    </div>
+                  )}
+
 
                 {session === "checking" && (
                   <p className={styles.sessionNote}>
@@ -687,7 +879,7 @@ export default function CheckoutPage() {
                     <button
                       type="submit"
                       className={styles.primaryButton}
-                      disabled={!payable || creating || loadingCourse}
+                      disabled={!payable || creating || loadingCourse || pendingCheck !== "ready" || checkedCourseId !== course.id}
                     >
                       {creating ? t.creating : t.create}
                       <span aria-hidden="true">→</span>
@@ -754,10 +946,25 @@ export default function CheckoutPage() {
                 </>
               ) : (
                 <>
+                  
                   <div className={styles.orderCreated}>
                     <span className={styles.createdDot} />
-                    {t.created}
+                    {existingPending ? t.existingOrder : t.created}
                   </div>
+
+                  {existingPending && (
+                    <div className={styles.pendingNotice}>
+                      <p>{t.existingOrderInfo}</p>
+
+                      <Link
+                        href={`/${locale}/my-orders`}
+                        className={styles.learningLink}
+                      >
+                        {t.viewOrders} ↗
+                      </Link>
+                    </div>
+                  )}
+
 
                   <div className={styles.orderIdentifier}>
                     <span>{t.orderNumber}</span>
@@ -811,6 +1018,7 @@ export default function CheckoutPage() {
                     </div>
                   )}
 
+                  
                   {order.status.toLowerCase() === "pending" &&
                     orderCurrencyMatches &&
                     order.totalAmount > 0 && (
@@ -818,12 +1026,20 @@ export default function CheckoutPage() {
                         type="button"
                         className={styles.primaryButton}
                         onClick={() => void startPayment()}
-                        disabled={paying}
+                        disabled={!PAYMENTS_ENABLED || paying}
                       >
-                        {paying ? t.paying : t.pay}
-                        <span aria-hidden="true">→</span>
+                        {!PAYMENTS_ENABLED
+                          ? t.payDisabled
+                          : paying
+                            ? t.paying
+                            : t.pay}
+
+                        <span aria-hidden="true">
+                          {!PAYMENTS_ENABLED ? "🔒" : "→"}
+                        </span>
                       </button>
                     )}
+
 
                   <p className={styles.actionHint}>
                     {t.paymentsNotice}
@@ -831,11 +1047,23 @@ export default function CheckoutPage() {
                 </>
               )}
 
+              
               {error && (
                 <div className={styles.alert} role="alert">
-                  {error}
+                  <p>{error}</p>
+
+                  <Link
+                    href={`/${locale}/my-orders`}
+                    className={styles.learningLink}
+                  >
+                    {locale === "ar"
+                      ? "عرض طلباتي الحالية"
+                      : "View my existing orders"}
+                    <span aria-hidden="true">↗</span>
+                  </Link>
                 </div>
               )}
+
 
               <Link
                 href={`/${locale}/my-learning`}
@@ -848,5 +1076,33 @@ export default function CheckoutPage() {
         )}
       </div>
     </main>
+  );
+}
+
+// ========================================
+// Checkout Page - Suspense Boundary
+// ========================================
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <main
+          style={{
+            minHeight: "70vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#64748b",
+            background: "#f7f9fc",
+          }}
+          role="status"
+        >
+          Loading checkout...
+        </main>
+      }
+    >
+      <CheckoutContent />
+    </Suspense>
   );
 }

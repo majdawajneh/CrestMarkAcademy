@@ -612,3 +612,18 @@
     transition: none !important;
   }
 }
+
+.primaryButton:disabled {
+  background: #e8edf4;
+  border-color: #e8edf4;
+  color: #8493a8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.primaryButton:disabled:hover {
+  background: #e8edf4;
+  border-color: #e8edf4;
+  transform: none;
+}

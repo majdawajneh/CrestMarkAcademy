@@ -1,4 +1,5 @@
-﻿using Application.Dto_s.Order;
+﻿
+using Application.Dto_s.Order;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,120 +14,128 @@ namespace CrestMarkAcademy.Controllers
     {
         private readonly IOrderService _orderService;
 
-
-        // =========================
-        // Constructor
-        // =========================
-
         public OrdersController(
             IOrderService orderService)
         {
             _orderService = orderService;
         }
 
-
-        // =========================
+        // ========================================
         // Create Order
-        // =========================
+        // ========================================
 
         [HttpPost]
-        public async Task<ActionResult<OrderDto>>
-            Create(CreateOrderDto dto)
+        public async Task<ActionResult<OrderDto>> Create(
+            CreateOrderDto dto)
         {
-            var userId =
-                GetCurrentUserId();
+            if (!TryGetCurrentUserId(out var userId))
+            {
+                return Unauthorized();
+            }
 
-
-            var order =
-                await _orderService
-                    .CreateAsync(
-                        userId,
-                        dto
-                    );
-
+            var order = await _orderService.CreateAsync(
+                userId,
+                dto);
 
             return CreatedAtAction(
                 nameof(GetById),
-                new
-                {
-                    id = order.Id
-                },
-                order
-            );
+                new { id = order.Id },
+                order);
         }
 
-
-        // =========================
+        // ========================================
         // Get My Orders
-        // =========================
+        // ========================================
 
         [HttpGet("my")]
-        public async Task<
-            ActionResult<IEnumerable<OrderDto>>>
+        public async Task<ActionResult<IEnumerable<OrderDto>>>
             GetMyOrders()
         {
-            var userId =
-                GetCurrentUserId();
+            if (!TryGetCurrentUserId(out var userId))
+            {
+                return Unauthorized();
+            }
 
-
-            var orders =
-                await _orderService
-                    .GetMyOrdersAsync(
-                        userId
-                    );
-
+            var orders = await _orderService
+                .GetMyOrdersAsync(userId);
 
             return Ok(orders);
         }
 
-
-        // =========================
-        // Get My Order By Id
-        // =========================
+        // ========================================
+        // Get My Order By ID
+        // ========================================
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<OrderDto>>
-            GetById(int id)
+        public async Task<ActionResult<OrderDto>> GetById(
+            int id)
         {
-            var userId =
-                GetCurrentUserId();
+            if (!TryGetCurrentUserId(out var userId))
+            {
+                return Unauthorized();
+            }
 
-
-            var order =
-                await _orderService
-                    .GetMyOrderByIdAsync(
-                        userId,
-                        id
-                    );
-
+            var order = await _orderService
+                .GetMyOrderByIdAsync(userId, id);
 
             return Ok(order);
         }
 
+        // ========================================
+        // Cancel My Pending Order
+        // ========================================
 
-        // =========================
-        // Get Current User Id
-        // =========================
-
-        private int GetCurrentUserId()
+        [HttpPost("{id:int}/cancel")]
+        public async Task<ActionResult<OrderDto>> Cancel(
+            int id)
         {
-            var userIdValue =
-                User.FindFirstValue(
-                    ClaimTypes.NameIdentifier
-                );
-
-
-            if (!int.TryParse(
-                    userIdValue,
-                    out var userId))
+            if (!TryGetCurrentUserId(out var userId))
             {
-                throw new UnauthorizedAccessException(
-                    "Invalid user token."
-                );
+                return Unauthorized();
             }
 
+            if (id <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Invalid order ID."
+                });
+            }
 
-            return userId;
+            try
+            {
+                var order = await _orderService
+                    .CancelPendingAsync(userId, id);
+
+                return Ok(order);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new
+                {
+                    message = "Order was not found."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        // ========================================
+        // Current User
+        // ========================================
+
+        private bool TryGetCurrentUserId(out int userId)
+        {
+            var value = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            return int.TryParse(value, out userId)
+                && userId > 0;
         }
     }
 }

@@ -30,19 +30,30 @@ namespace CrestMarkAcademy.Controllers
         // Start Checkout
         // =========================
 
+
         [HttpPost("orders/{orderId:int}/checkout")]
         [Authorize]
         public async Task<IActionResult> Checkout(
             int orderId,
             CancellationToken ct)
         {
+            // Disable payment checkout at the API level.
+            if (!_config.GetValue<bool>("PayTabs:Enabled"))
+            {
+                return StatusCode(
+                    StatusCodes.Status503ServiceUnavailable,
+                    new
+                    {
+                        message = "Online payments are temporarily unavailable."
+                    }
+                );
+            }
+
             var userIdValue = User.FindFirstValue(
                 ClaimTypes.NameIdentifier
             );
 
-            if (!int.TryParse(
-                userIdValue,
-                out var userId))
+            if (!int.TryParse(userIdValue, out var userId))
             {
                 return Unauthorized();
             }
@@ -58,6 +69,7 @@ namespace CrestMarkAcademy.Controllers
                 redirectUrl = url
             });
         }
+
 
         // =========================
         // PayTabs Callback
@@ -189,32 +201,38 @@ namespace CrestMarkAcademy.Controllers
                     return BadRequest();
                 }
 
+
                 // =========================
                 // 6. Verify With PayTabs API
                 // =========================
 
-                var verified = await _gateway.ConfirmAsync(
+                // True means the gateway result
+                // was verified and processed.
+                // It may be Paid or Failed.
+
+                var processed = await _gateway.ConfirmAsync(
                     transactionReference,
                     ct
                 );
 
-                if (!verified)
+                if (!processed)
                 {
                     return BadRequest(new
                     {
                         message =
-                            "Payment could not be verified."
+                            "Payment status could not be finalized."
                     });
                 }
 
                 // =========================
-                // 7. Success
+                // 7. Callback Processed
                 // =========================
 
                 return Ok(new
                 {
                     received = true
                 });
+
             }
             catch (JsonException)
             {

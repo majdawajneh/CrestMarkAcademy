@@ -5,10 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+
 import {
   getCurrentSession,
   type SessionUser,
 } from "@/lib/auth-session";
+
 import styles from "./Navbar.module.css";
 
 type SessionState =
@@ -16,6 +18,10 @@ type SessionState =
   | "guest"
   | "authenticated"
   | "unavailable";
+
+// ========================================
+// Translations
+// ========================================
 
 const translations = {
   en: {
@@ -25,22 +31,29 @@ const translations = {
     about: "About Us",
     contact: "Contact",
     verifyCertificate: "Verify Certificate",
+
     search: "Search courses",
     login: "Log in",
     signup: "Sign Up",
+
     myLearning: "My Learning",
+    myOrders: "My Orders",
     dashboard: "Dashboard",
     profile: "My Profile",
+
     logout: "Log out",
     loggingOut: "Logging out...",
     logoutError: "Couldn't log out. Please try again.",
+
     sessionUnavailable: "Session temporarily unavailable",
     retry: "Try again",
+
     menu: "Open menu",
     close: "Close menu",
     account: "Account menu",
     language: "Switch to Arabic",
   },
+
   ar: {
     home: "الرئيسية",
     courses: "الدورات",
@@ -48,17 +61,23 @@ const translations = {
     about: "من نحن",
     contact: "تواصل معنا",
     verifyCertificate: "التحقق من الشهادات",
+
     search: "البحث عن دورات",
     login: "تسجيل الدخول",
     signup: "إنشاء حساب",
+
     myLearning: "دوراتي",
+    myOrders: "طلباتي",
     dashboard: "لوحة التحكم",
     profile: "ملفي الشخصي",
+
     logout: "تسجيل الخروج",
     loggingOut: "جارٍ تسجيل الخروج...",
     logoutError: "تعذّر تسجيل الخروج. حاول مرة أخرى.",
+
     sessionUnavailable: "تعذّر الاتصال مؤقتًا",
     retry: "إعادة المحاولة",
+
     menu: "فتح القائمة",
     close: "إغلاق القائمة",
     account: "قائمة الحساب",
@@ -66,9 +85,17 @@ const translations = {
   },
 } as const;
 
+// ========================================
+// Icons
+// ========================================
+
 function SearchIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <circle cx="10.8" cy="10.8" r="6.8" />
       <path d="m16 16 5 5" />
     </svg>
@@ -77,7 +104,11 @@ function SearchIcon() {
 
 function GlobeIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18M12 3c3 3 4.5 6 4.5 9S15 18 12 21M12 3c-3 3-4.5 6-4.5 9S9 18 12 21" />
     </svg>
@@ -86,16 +117,29 @@ function GlobeIcon() {
 
 function ChevronIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <path d="m6 9 6 6 6-6" />
     </svg>
   );
 }
 
+// ========================================
+// Navbar
+// ========================================
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+
   const accountRef = useRef<HTMLDivElement>(null);
+
+  // ========================================
+  // Locale
+  // ========================================
 
   const locale =
     pathname === "/ar" || pathname.startsWith("/ar/")
@@ -104,17 +148,27 @@ export default function Navbar() {
 
   const t = translations[locale];
 
+  // ========================================
+  // State
+  // ========================================
+
   const [user, setUser] = useState<SessionUser | null>(null);
+
   const [session, setSession] =
     useState<SessionState>("loading");
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+
   const [retryCount, setRetryCount] = useState(0);
 
-  // Restore existing authentication session.
+  // ========================================
+  // Restore Authentication Session
+  // ========================================
+
   useEffect(() => {
     let cancelled = false;
 
@@ -138,7 +192,9 @@ export default function Navbar() {
         setUser(null);
         setSession("guest");
       } catch {
-        if (!cancelled) setSession("unavailable");
+        if (!cancelled) {
+          setSession("unavailable");
+        }
       }
     }
 
@@ -149,7 +205,10 @@ export default function Navbar() {
     };
   }, [pathname, retryCount]);
 
-  // Close the account menu on Escape or outside click.
+  // ========================================
+  // Close Menus
+  // ========================================
+
   useEffect(() => {
     if (!accountOpen && !menuOpen) return;
 
@@ -175,39 +234,94 @@ export default function Navbar() {
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
-      document.removeEventListener("pointerdown", handleOutsideClick);
+      document.removeEventListener(
+        "pointerdown",
+        handleOutsideClick
+      );
     };
   }, [accountOpen, menuOpen]);
 
+  // ========================================
+  // Roles
+  // ========================================
+
   const isAdmin =
-    user?.roles.some((role) => role.toLowerCase() === "admin") ??
-    false;
+    user?.roles.some(
+      (role) => role.toLowerCase() === "admin"
+    ) ?? false;
 
   const isStudent =
-    user?.roles.some((role) => role.toLowerCase() === "student") ??
-    false;
+    user?.roles.some(
+      (role) => role.toLowerCase() === "student"
+    ) ?? false;
+
+  // ========================================
+  // Main Navigation
+  // ========================================
 
   const navLinks = [
-    { label: t.home, href: `/${locale}` },
-    { label: t.courses, href: `/${locale}/courses` },
-    { label: t.categories, href: `/${locale}/categories` },
-    { label: t.about, href: `/${locale}/about` },
+    {
+      label: t.home,
+      href: `/${locale}`,
+    },
+    {
+      label: t.courses,
+      href: `/${locale}/courses`,
+    },
+    {
+      label: t.categories,
+      href: `/${locale}/categories`,
+    },
+    {
+      label: t.about,
+      href: `/${locale}/about`,
+    },
     {
       label: t.verifyCertificate,
       href: `/${locale}/verify-certificate`,
     },
-    { label: t.contact, href: `/${locale}/contact` },
+    {
+      label: t.contact,
+      href: `/${locale}/contact`,
+    },
   ];
+
+  // ========================================
+  // Account Navigation
+  // ========================================
 
   const accountLinks = [
     ...(isAdmin
-      ? [{ label: t.dashboard, href: `/${locale}/admin` }]
+      ? [
+          {
+            label: t.dashboard,
+            href: `/${locale}/admin`,
+          },
+        ]
       : []),
+
     ...(isStudent
-      ? [{ label: t.myLearning, href: `/${locale}/my-learning` }]
+      ? [
+          {
+            label: t.myLearning,
+            href: `/${locale}/my-learning`,
+          },
+          {
+            label: t.myOrders,
+            href: `/${locale}/my-orders`,
+          },
+        ]
       : []),
-    { label: t.profile, href: `/${locale}/profile` },
+
+    {
+      label: t.profile,
+      href: `/${locale}/profile`,
+    },
   ];
+
+  // ========================================
+  // Language Switching
+  // ========================================
 
   const otherLocale = locale === "en" ? "ar" : "en";
 
@@ -218,6 +332,10 @@ export default function Navbar() {
     ) || `/${otherLocale}`;
 
   const displayName = user?.username || "";
+
+  // ========================================
+  // Helpers
+  // ========================================
 
   function closeMenus() {
     setMenuOpen(false);
@@ -236,6 +354,10 @@ export default function Navbar() {
     setSession("loading");
     setRetryCount((count) => count + 1);
   }
+
+  // ========================================
+  // Logout
+  // ========================================
 
   async function handleLogout() {
     if (loggingOut) return;
@@ -257,6 +379,7 @@ export default function Navbar() {
 
       setUser(null);
       setSession("guest");
+
       closeMenus();
 
       router.replace(`/${locale}`);
@@ -268,32 +391,45 @@ export default function Navbar() {
     }
   }
 
+  // ========================================
+  // Render
+  // ========================================
+
   return (
     <header className={styles.header}>
       <div className={styles.container}>
-        
-          {/* Brand */}
-          <Link
-            href={`/${locale}`}
-            className={styles.brand}
-            aria-label="CrestMark Academy"
-            onClick={closeMenus}
-          >
-            <Image
-              src="/crestmark-logo.png"
-              alt="CrestMark Academy"
-              width={2048}
-              height={677}
-              priority
-              className={styles.navbarLogo}
-            />
-          </Link>
 
+        {/* =================================
+            Brand
+        ================================= */}
 
-        {/* Desktop navigation */}
+        <Link
+          href={`/${locale}`}
+          className={styles.brand}
+          aria-label="CrestMark Academy"
+          onClick={closeMenus}
+        >
+          <Image
+            src="/crestmark-logo.png"
+            alt="CrestMark Academy"
+            width={2048}
+            height={677}
+            priority
+            className={styles.navbarLogo}
+          />
+        </Link>
+
+        {/* =================================
+            Desktop Navigation
+        ================================= */}
+
         <nav
           className={styles.desktopNav}
-          aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main navigation"}
+          aria-label={
+            locale === "ar"
+              ? "التنقل الرئيسي"
+              : "Main navigation"
+          }
         >
           {navLinks.map((link) => (
             <Link
@@ -303,7 +439,9 @@ export default function Navbar() {
                 isActive(link.href) ? styles.active : ""
               }`}
               aria-current={
-                pathname === link.href ? "page" : undefined
+                pathname === link.href
+                  ? "page"
+                  : undefined
               }
               onClick={closeMenus}
             >
@@ -312,8 +450,14 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Search, language and account */}
+        {/* =================================
+            Search, Language, Account
+        ================================= */}
+
         <div className={styles.actions}>
+
+          {/* Search */}
+
           <Link
             href={`/${locale}/courses`}
             className={styles.searchAction}
@@ -323,6 +467,8 @@ export default function Navbar() {
           >
             <SearchIcon />
           </Link>
+
+          {/* Language Switch */}
 
           <Link
             href={localizedPath}
@@ -335,6 +481,10 @@ export default function Navbar() {
             <GlobeIcon />
             <span>{otherLocale.toUpperCase()}</span>
           </Link>
+
+          {/* =================================
+              Authentication
+          ================================= */}
 
           {session === "loading" ? (
             <div
@@ -351,7 +501,15 @@ export default function Navbar() {
               {t.retry}
             </button>
           ) : session === "authenticated" && user ? (
-            <div className={styles.accountArea} ref={accountRef}>
+
+            /* =================================
+                Logged-in Account
+            ================================= */
+
+            <div
+              className={styles.accountArea}
+              ref={accountRef}
+            >
               <button
                 type="button"
                 className={styles.accountButton}
@@ -359,7 +517,9 @@ export default function Navbar() {
                 aria-haspopup="menu"
                 aria-expanded={accountOpen}
                 aria-controls={
-                  accountOpen ? "cm-account-dropdown" : undefined
+                  accountOpen
+                    ? "cm-account-dropdown"
+                    : undefined
                 }
                 onClick={() => {
                   setAccountOpen((value) => !value);
@@ -376,6 +536,8 @@ export default function Navbar() {
 
                 <ChevronIcon />
               </button>
+
+              {/* Account Dropdown */}
 
               {accountOpen && (
                 <div
@@ -404,7 +566,9 @@ export default function Navbar() {
                     onClick={handleLogout}
                     disabled={loggingOut}
                   >
-                    {loggingOut ? t.loggingOut : t.logout}
+                    {loggingOut
+                      ? t.loggingOut
+                      : t.logout}
                   </button>
 
                   {logoutError && (
@@ -419,6 +583,11 @@ export default function Navbar() {
               )}
             </div>
           ) : (
+
+            /* =================================
+                Guest Actions
+            ================================= */
+
             <div className={styles.guestActions}>
               <Link
                 href={`/${locale}/login`}
@@ -438,14 +607,21 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* Mobile menu toggle */}
+          {/* =================================
+              Mobile Toggle
+          ================================= */}
+
           <button
             type="button"
             className={styles.menuToggle}
-            aria-label={menuOpen ? t.close : t.menu}
+            aria-label={
+              menuOpen ? t.close : t.menu
+            }
             aria-expanded={menuOpen}
             aria-controls={
-              menuOpen ? "crestmark-mobile-nav" : undefined
+              menuOpen
+                ? "crestmark-mobile-nav"
+                : undefined
             }
             onClick={() => {
               setMenuOpen((value) => !value);
@@ -453,11 +629,19 @@ export default function Navbar() {
             }}
           >
             {menuOpen ? (
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
                 <path d="M5 5 19 19M19 5 5 19" />
               </svg>
             ) : (
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
                 <path d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             )}
@@ -465,25 +649,36 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile navigation */}
+      {/* =================================
+          Mobile Navigation
+      ================================= */}
+
       {menuOpen && (
         <nav
           id="crestmark-mobile-nav"
           className={styles.mobileNav}
           aria-label={
-            locale === "ar" ? "قائمة الجوال" : "Mobile navigation"
+            locale === "ar"
+              ? "قائمة الجوال"
+              : "Mobile navigation"
           }
         >
+          {/* Public Navigation */}
+
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={closeMenus}
               className={`${styles.mobileLink} ${
-                isActive(link.href) ? styles.mobileActive : ""
+                isActive(link.href)
+                  ? styles.mobileActive
+                  : ""
               }`}
               aria-current={
-                pathname === link.href ? "page" : undefined
+                pathname === link.href
+                  ? "page"
+                  : undefined
               }
             >
               {link.label}
@@ -491,8 +686,15 @@ export default function Navbar() {
             </Link>
           ))}
 
+          {/* =================================
+              Mobile Account
+          ================================= */}
+
           {session === "authenticated" && user ? (
             <div className={styles.mobileAccount}>
+
+              {/* User Identity */}
+
               <div className={styles.mobileUser}>
                 <span className={styles.avatar}>
                   {displayName.charAt(0).toUpperCase()}
@@ -503,6 +705,8 @@ export default function Navbar() {
                   <span>{user.email}</span>
                 </div>
               </div>
+
+              {/* Account Links */}
 
               {accountLinks.map((link) => (
                 <Link
@@ -516,22 +720,32 @@ export default function Navbar() {
                 </Link>
               ))}
 
+              {/* Logout */}
+
               <button
                 type="button"
                 className={styles.mobileLogout}
                 onClick={handleLogout}
                 disabled={loggingOut}
               >
-                {loggingOut ? t.loggingOut : t.logout}
+                {loggingOut
+                  ? t.loggingOut
+                  : t.logout}
               </button>
 
               {logoutError && (
-                <p className={styles.logoutError} role="alert">
+                <p
+                  className={styles.logoutError}
+                  role="alert"
+                >
                   {logoutError}
                 </p>
               )}
             </div>
           ) : session === "guest" ? (
+
+            /* Mobile Guest Actions */
+
             <div className={styles.mobileActions}>
               <Link
                 href={`/${locale}/login`}
@@ -548,6 +762,9 @@ export default function Navbar() {
               </Link>
             </div>
           ) : session === "unavailable" ? (
+
+            /* Mobile Session Retry */
+
             <div className={styles.mobileAccount}>
               <button
                 type="button"

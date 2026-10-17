@@ -1,0 +1,357 @@
+
+.page {
+  min-height: 80vh;
+  padding: 48px 24px 110px;
+  background: #f7f9fc;
+  color: #183452;
+}
+
+.container {
+  max-width: 880px;
+  margin-inline: auto;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #527091;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: #2563eb;
+}
+
+.pageHeading {
+  margin: 42px 0 30px;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: #3576d6;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+}
+
+.pageHeading h1 {
+  margin: 0;
+  color: #102a52;
+  font-size: clamp(32px, 4vw, 46px);
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  line-height: 1.2;
+}
+
+.pageHeading > p:last-child {
+  margin: 14px 0 0;
+  color: #73849b;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.resultCard {
+  padding: 48px 54px;
+  background: #fff;
+  border: 1px solid #e1e9f3;
+  border-radius: 18px;
+  box-shadow: 0 12px 38px rgba(27, 52, 88, 0.035);
+}
+
+.symbol {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  font-size: 36px;
+  font-weight: 800;
+}
+
+.symbolPaid {
+  color: #13805c;
+  background: #eaf8f1;
+  border: 1px solid #cfefdf;
+}
+
+.symbolPending {
+  color: #ad791a;
+  background: #fff7e7;
+  border: 1px solid #f6e8c4;
+  font-size: 30px;
+}
+
+.symbolNeutral {
+  color: #56728f;
+  background: #edf3fa;
+  border: 1px solid #dde7f2;
+}
+
+.resultCopy {
+  margin-top: 28px;
+}
+
+.resultCopy h2 {
+  margin: 0;
+  color: #102a52;
+  font-size: clamp(23px, 3vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.65px;
+  line-height: 1.35;
+}
+
+.resultCopy p {
+  max-width: 640px;
+  margin: 13px 0 0;
+  color: #6c8098;
+  font-size: 14px;
+  line-height: 1.95;
+}
+
+.orderDetails {
+  margin-top: 36px;
+  border: 1px solid #e6edf5;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.referenceRow,
+.detailRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 19px 23px;
+  border-bottom: 1px solid #e9eef5;
+}
+
+.referenceRow {
+  background: #f8fbff;
+}
+
+.referenceRow > span,
+.detailRow > span:first-child {
+  color: #7c8da4;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.referenceRow strong {
+  color: #23578f;
+  font-size: 13px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.detailRow strong {
+  color: #16375b;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.statusLabel {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.statusPaid {
+  background: #e9f8f0;
+  color: #16815c;
+}
+
+.statusPending {
+  background: #fff5df;
+  color: #aa7518;
+}
+
+.statusNeutral {
+  background: #f0f3f7;
+  color: #687d94;
+}
+
+.courseBlock {
+  padding: 23px;
+}
+
+.courseBlock h3 {
+  margin: 0 0 18px;
+  color: #173653;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.courseRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid #e9eef5;
+}
+
+.courseRow span:first-child {
+  color: #35506c;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+
+.courseRow span:last-child {
+  color: #173653;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.paidDate {
+  margin: 0;
+  padding: 16px 23px;
+  border-top: 1px solid #e9eef5;
+  color: #6e8094;
+  font-size: 12px;
+}
+
+.pendingNotice {
+  margin-top: 22px;
+  padding: 15px 18px;
+  border: 1px solid #f0e4c8;
+  border-radius: 9px;
+  background: #fffbf2;
+  color: #92733d;
+  font-size: 12px;
+  line-height: 1.85;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 47px;
+  padding: 12px 22px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.primaryButton {
+  color: #fff;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+}
+
+.primaryButton:hover {
+  background: #1c51c0;
+  border-color: #1c51c0;
+}
+
+.secondaryButton {
+  color: #28588c;
+  background: #fff;
+  border: 1px solid #d9e5f2;
+}
+
+.secondaryButton:hover {
+  background: #f0f6ff;
+  border-color: #b8d0f1;
+}
+
+.loadingFallback {
+  max-width: 880px;
+  margin: 80px auto;
+  color: #68809a;
+  font-size: 14px;
+  text-align: center;
+}
+
+.spinner {
+  width: 29px;
+  height: 29px;
+  border: 3px solid #dbe7f7;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.page button:focus-visible,
+.page a:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 26px 16px 70px;
+  }
+
+  .pageHeading {
+    margin: 32px 0 24px;
+  }
+
+  .resultCard {
+    padding: 30px 22px;
+  }
+
+  .symbol {
+    width: 62px;
+    height: 62px;
+    font-size: 30px;
+  }
+
+  .referenceRow,
+  .detailRow {
+    padding: 17px;
+  }
+
+  .courseBlock {
+    padding: 18px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    transition: none;
+  }
+}

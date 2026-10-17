@@ -143,6 +143,33 @@ namespace Application.Services
                     dto.PaymentProvider
                         .Trim();
 
+                var isPayTabs = string.Equals(
+                    paymentProvider,
+                    "PayTabs",
+                    StringComparison.OrdinalIgnoreCase
+                );
+
+                if (isPayTabs)
+                {
+                    if (!string.Equals(
+                            order.Currency,
+                            "USD",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new InvalidOperationException(
+                            "PayTabs checkout only supports USD orders. " +
+                            "Please create a new order with the correct currency."
+                        );
+                    }
+
+                    if (order.TotalAmount <= 0)
+                    {
+                        throw new InvalidOperationException(
+                            "PayTabs checkout requires an order total greater than zero."
+                        );
+                    }
+                }
+
 
                 // =========================
                 // Existing Pending Payment
@@ -155,15 +182,37 @@ namespace Application.Services
                         );
 
 
+
                 if (existingPayment != null)
                 {
+                    if (!string.Equals(
+                            existingPayment.PaymentProvider,
+                            paymentProvider,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new InvalidOperationException(
+                            "This order already has a pending payment " +
+                            "with a different payment provider."
+                        );
+                    }
+
+                    if (existingPayment.Amount != order.TotalAmount ||
+                        !string.Equals(
+                            existingPayment.Currency,
+                            order.Currency,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new InvalidOperationException(
+                            "The existing payment amount or currency " +
+                            "does not match the order."
+                        );
+                    }
+
                     transactionScope.Complete();
 
-
-                    return MapToDto(
-                        existingPayment
-                    );
+                    return MapToDto(existingPayment);
                 }
+
 
 
                 // =========================
@@ -189,7 +238,12 @@ namespace Application.Services
                             "Pending",
 
                         CreatedAt =
-                            DateTime.UtcNow
+                            DateTime.UtcNow,
+
+
+                       CheckoutStatus = 
+                            "NotStarted",
+
                     };
 
 

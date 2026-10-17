@@ -4,7 +4,9 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Suspense } from "react";
 import styles from "../page.module.css";
+
 
 type Category = {
   id: number;
@@ -94,7 +96,7 @@ function parseCategory(value: unknown): Category | null {
   };
 }
 
-export default function CategoryDetailsPage() {
+function CategoryDetailsContent() {
   const params = useParams<{
     locale: string;
     slug: string;
@@ -252,5 +254,27 @@ export default function CategoryDetailsPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function CategoryDetailsPage() {
+  return (
+    <Suspense
+      fallback={
+        <main
+          style={{
+            minHeight: "65vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#64748b",
+          }}
+        >
+          Loading category...
+        </main>
+      }
+    >
+      <CategoryDetailsContent />
+    </Suspense>
   );
 }

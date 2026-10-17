@@ -5,6 +5,7 @@ using Application.Services.Interfaces;
 using Domain.Entities.Catalog;
 using Domain.Entities.Commerce;
 using Domain.Entities.Identity;
+using System.Transactions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,25 +42,26 @@ namespace Application.Services
             _couponCourseRepo = couponCourseRepo;
         }
 
+        private const string AcademyCurrency = "USD";
+
         // =========================
         // Create Order
         // =========================
+
 
         public async Task<OrderDto> CreateAsync(
             int userId,
             CreateOrderDto dto)
         {
-            // Validate User
-            var user = await _userRepo.GetByIdAsync(userId);
+            const string orderCurrency = "USD";
 
-            if (user == null)
-            {
-                throw new KeyNotFoundException(
-                    "User was not found.");
-            }
+            // ========================================
+            // Validate Request
+            // ========================================
 
-            // Validate Course IDs
-            if (dto.CourseIds == null || dto.CourseIds.Count == 0)
+            if (dto == null ||
+                dto.CourseIds == null ||
+                dto.CourseIds.Count == 0)
             {
                 throw new ArgumentException(
                     "At least one course is required.");
@@ -68,7 +70,7 @@ namespace Application.Services
             if (dto.CourseIds.Any(id => id <= 0))
             {
                 throw new ArgumentException(
-                    "Invalid course id.");
+                    "Invalid course ID.");
             }
 
             var distinctCourseIds = dto.CourseIds
@@ -81,11 +83,44 @@ namespace Application.Services
                     "The same course cannot be added more than once.");
             }
 
-            var courses = new List<Course>();
+            // ========================================
+            // Begin Atomic Order Creation
+            // ========================================
 
-            // =========================
-            // Validate Courses
-            // =========================
+            var transactionOptions = new TransactionOptions
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TimeSpan.FromSeconds(60)
+            };
+
+            using var transaction = new TransactionScope(
+                TransactionScopeOption.Required,
+                transactionOptions,
+                TransactionScopeAsyncFlowOption.Enabled
+            );
+
+            // Only one order creation for this user can
+            // proceed at a time.
+            await _orderDetailsRepo
+                .AcquireUserOrderCreationLockAsync(userId);
+
+            // ========================================
+            // Validate User
+            // ========================================
+
+            var user = await _userRepo.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                throw new KeyNotFoundException(
+                    "User was not found.");
+            }
+
+            // ========================================
+            // Validate Courses And Enrollments
+            // ========================================
+
+            var courses = new List<Course>();
 
             foreach (var courseId in distinctCourseIds)
             {
@@ -95,21 +130,22 @@ namespace Application.Services
                 if (course == null)
                 {
                     throw new KeyNotFoundException(
-                        $"Course with id {courseId} was not found.");
+                        $"Course with ID {courseId} was not found.");
                 }
 
                 if (!string.Equals(
-                    course.Status,
-                    "Published",
-                    StringComparison.OrdinalIgnoreCase))
+                        course.Status,
+                        "Published",
+                        StringComparison.OrdinalIgnoreCase))
                 {
                     throw new InvalidOperationException(
                         $"Course '{course.Title}' is not available for purchase.");
                 }
 
-                // Check Existing Enrollment
                 var enrollment = await _enrollmentRepo
-                    .GetByUserAndCourseAsync(userId, courseId);
+                    .GetByUserAndCourseAsync(
+                        userId,
+                        courseId);
 
                 if (enrollment != null &&
                     (
@@ -131,14 +167,131 @@ namespace Application.Services
                 courses.Add(course);
             }
 
-            // =========================
+            // ========================================
+            // Load Existing Orders
+            // ========================================
+
+            var existingOrders = (
+                await _orderDetailsRepo
+                    .GetByUserIdWithDetailsAsync(userId)
+            ).ToList();
+
+            var selectedCourseIds = distinctCourseIds.ToHashSet();
+
+            // ========================================
+            // Prevent Repurchasing Paid Courses
+            // ========================================
+
+            var existingPaidOrder = existingOrders
+                .FirstOrDefault(order =>
+                    string.Equals(
+                        order.Status,
+                        "Paid",
+                        StringComparison.OrdinalIgnoreCase)
+                    &&
+                    order.OrderItems.Any(item =>
+                        selectedCourseIds.Contains(item.CourseId))
+                );
+
+            if (existingPaidOrder != null)
+            {
+                throw new InvalidOperationException(
+                    "One or more selected courses have already been purchased. " +
+                    $"Existing order: {existingPaidOrder.OrderNumber}.");
+            }
+
+            // ========================================
+            // Check Existing Pending USD Orders
+            // ========================================
+
+            var requestedCouponCode =
+                dto.CouponCode?.Trim() ?? string.Empty;
+
+            foreach (var existingOrder in existingOrders)
+            {
+                if (!string.Equals(
+                        existingOrder.Status,
+                        "Pending",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                // Never reuse legacy JOD orders as USD.
+                if (!string.Equals(
+                        existingOrder.Currency,
+                        orderCurrency,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var existingCourseIds = existingOrder.OrderItems
+                    .Select(item => item.CourseId)
+                    .ToList();
+
+                // Ignore unrelated pending orders.
+                var overlaps = existingCourseIds.Any(
+                    id => selectedCourseIds.Contains(id));
+
+                if (!overlaps)
+                {
+                    continue;
+                }
+
+                // ====================================
+                // Compare Courses
+                // ====================================
+
+                var sameCourses =
+                    existingCourseIds.Count == distinctCourseIds.Count
+                    &&
+                    existingCourseIds
+                        .ToHashSet()
+                        .SetEquals(selectedCourseIds);
+
+                // ====================================
+                // Compare Coupon
+                // ====================================
+
+                var existingCouponCode =
+                    existingOrder.Coupon?.Code?.Trim()
+                    ?? string.Empty;
+
+                var sameCoupon = string.Equals(
+                    existingCouponCode,
+                    requestedCouponCode,
+                    StringComparison.OrdinalIgnoreCase
+                );
+
+                // ====================================
+                // Reuse Identical Pending Order
+                // ====================================
+
+                if (sameCourses && sameCoupon)
+                {
+                    transaction.Complete();
+
+                    return MapToDto(existingOrder);
+                }
+
+                // ====================================
+                // Reject Conflicting Pending Order
+                // ====================================
+
+                throw new InvalidOperationException(
+                    "You already have a pending USD order " +
+                    "containing one or more selected courses. " +
+                    $"Order: {existingOrder.OrderNumber}. " +
+                    "Please review your existing order before creating another.");
+            }
+
+            // ========================================
             // Create Order Items
-            // =========================
+            // ========================================
 
             var orderItems = new List<OrderItem>();
 
-            // Courses already discounted are excluded
-            // from additional coupon discounts.
             var discountedCourseIds = new HashSet<int>();
 
             foreach (var course in courses)
@@ -152,8 +305,8 @@ namespace Application.Services
                         $"Course '{course.Title}' has an invalid price.");
                 }
 
-                // A real course discount exists only
-                // when DiscountPrice < Price.
+                // An existing course discount cannot
+                // be combined with an additional coupon.
                 if (course.DiscountPrice.HasValue &&
                     course.DiscountPrice.Value < course.Price)
                 {
@@ -174,9 +327,9 @@ namespace Application.Services
                 orderItems.Add(item);
             }
 
-            // =========================
+            // ========================================
             // Validate And Apply Coupon
-            // =========================
+            // ========================================
 
             Coupon? coupon = null;
 
@@ -185,60 +338,70 @@ namespace Application.Services
                 coupon = await GetValidCouponAsync(
                     dto.CouponCode);
 
-                // Apply the coupon only to eligible
-                // courses without existing discounts.
                 await ApplyCouponAsync(
                     coupon,
                     orderItems,
                     discountedCourseIds);
             }
 
-            // =========================
-            // Calculate Order Totals
-            // =========================
+            // ========================================
+            // Calculate Totals
+            // ========================================
 
             decimal subtotal = RoundMoney(
-                orderItems.Sum(i => i.UnitPrice));
+                orderItems.Sum(item => item.UnitPrice));
 
             decimal discountAmount = RoundMoney(
-                orderItems.Sum(i => i.DiscountAmount));
+                orderItems.Sum(item => item.DiscountAmount));
 
             decimal totalAmount = RoundMoney(
-                orderItems.Sum(i => i.FinalPrice));
+                orderItems.Sum(item => item.FinalPrice));
 
             if (totalAmount < 0)
             {
                 totalAmount = 0;
             }
 
-            // =========================
+            // ========================================
             // Generate Order Number
-            // =========================
+            // ========================================
 
-            var orderNumber = await GenerateOrderNumberAsync();
+            var orderNumber =
+                await GenerateOrderNumberAsync();
 
-            // =========================
-            // Create Order Entity
-            // =========================
+            // ========================================
+            // Create Order
+            // ========================================
 
             var order = new OrderEntity
             {
                 UserId = userId,
                 OrderNumber = orderNumber,
+
                 Subtotal = subtotal,
                 DiscountAmount = discountAmount,
                 TotalAmount = totalAmount,
-                Currency = "JOD",
+
+                Currency = orderCurrency,
                 Status = "Pending",
+
                 CreatedAt = DateTime.UtcNow,
                 CouponId = coupon?.Id,
+
                 OrderItems = orderItems
             };
+
+            // ========================================
+            // Save Order
+            // ========================================
 
             await _orderRepo.AddAsync(order);
             await _orderRepo.SaveChangesAsync();
 
-            // Reload Full Order Details
+            // ========================================
+            // Reload Order Details
+            // ========================================
+
             var createdOrder = await _orderDetailsRepo
                 .GetByIdWithDetailsAsync(order.Id);
 
@@ -248,8 +411,33 @@ namespace Application.Services
                     "Order was created but could not be loaded.");
             }
 
-            return MapToDto(createdOrder);
+            var result = MapToDto(createdOrder);
+
+            // ========================================
+            // Commit Transaction
+            // ========================================
+
+            transaction.Complete();
+
+            return result;
         }
+
+        // ========================================
+        // Cancel My Pending Order
+        // ========================================
+
+        public async Task<OrderDto> CancelPendingAsync(
+            int userId,
+            int orderId)
+        {
+            var cancelledOrder = await _orderDetailsRepo
+                .CancelPendingWithoutPaymentsAsync(
+                    userId,
+                    orderId);
+
+            return MapToDto(cancelledOrder);
+        }
+
 
         // =========================
         // Get My Orders

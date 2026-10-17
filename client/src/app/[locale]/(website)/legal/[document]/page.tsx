@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import styles from "./page.module.css";
+import { Suspense } from "react";
 
 type Locale = "en" | "ar";
 
@@ -496,7 +497,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function LegalDocumentPage({
+  async function LegalDocumentContent({
   params,
 }: Props) {
   const { locale: rawLocale, document } = await params;
@@ -601,5 +602,26 @@ export default async function LegalDocumentPage({
         </div>
       </div>
     </main>
+  );
+}
+export default function LegalDocumentPage({
+  params,
+}: Props) {
+  return (
+    <Suspense
+      fallback={
+        <main className={styles.page}>
+          <div
+            className={styles.container}
+            role="status"
+            aria-live="polite"
+          >
+            <p>Loading document...</p>
+          </div>
+        </main>
+      }
+    >
+      <LegalDocumentContent params={params} />
+    </Suspense>
   );
 }

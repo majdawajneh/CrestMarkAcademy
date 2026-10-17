@@ -144,12 +144,22 @@ public sealed class PayTabsService
     // Start Checkout
     // =========================
 
+
     public async Task<string> StartAsync(
         int userId,
         int orderId,
         CancellationToken ct)
     {
+        // Payment gateway must be explicitly enabled.
+        if (!_config.GetValue<bool>("PayTabs:Enabled"))
+        {
+            throw new InvalidOperationException(
+                "PayTabs checkout is currently disabled."
+            );
+        }
+
         var settings = Settings();
+
 
         var payment = await _payments.CreateAsync(
             userId,
@@ -159,6 +169,17 @@ public sealed class PayTabsService
                 PaymentProvider = "PayTabs"
             }
         );
+
+        if (!string.Equals(
+                payment.Currency,
+                "USD",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "Checkout is available for USD orders only. " +
+                "Please create a new order using the correct currency.");
+        }
+
 
         if (!string.Equals(
                 payment.Status,
@@ -209,6 +230,12 @@ public sealed class PayTabsService
 
         try
         {
+
+            var returnUrl = new UriBuilder(settings.ReturnUrl)
+            {
+                Query = $"orderId={orderId}"
+            }.Uri.AbsoluteUri;
+
             using var reply = await SendAsync(
                 "/payment/request",
                 new
@@ -230,7 +257,7 @@ public sealed class PayTabsService
 
                     callback = settings.CallbackUrl,
 
-                    @return = settings.ReturnUrl
+                    @return = returnUrl
                 },
                 ct
             );
@@ -483,15 +510,15 @@ public sealed class PayTabsService
             return false;
         }
 
-        // =========================
+
+        // ========================================
         // Validate Payment Result
-        // =========================
+        // ========================================
 
         if (!root.TryGetProperty(
                 "payment_result",
                 out var paymentResult) ||
-            paymentResult.ValueKind !=
-                JsonValueKind.Object)
+            paymentResult.ValueKind != JsonValueKind.Object)
         {
             return false;
         }
@@ -499,55 +526,96 @@ public sealed class PayTabsService
         var responseStatus = ReadString(
             paymentResult,
             "response_status"
-        );
+        )?.ToUpperInvariant();
 
-        if (!string.Equals(
-                responseStatus,
-                "A",
-                StringComparison.Ordinal))
+        if (string.IsNullOrWhiteSpace(responseStatus))
         {
             return false;
         }
 
-        // =========================
-        // Already Paid
-        // =========================
+        // ========================================
+        // Successful Payment
+        // ========================================
 
-        if (string.Equals(
-                payment.Status,
-                "Paid",
-                StringComparison.OrdinalIgnoreCase))
+        if (responseStatus == "A")
         {
-            return string.Equals(
-                payment.TransactionId,
-                transactionReference,
-                StringComparison.Ordinal);
-        }
-
-        // =========================
-        // Require Pending
-        // =========================
-
-        if (!string.Equals(
-                payment.Status,
-                "Pending",
-                StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        // =========================
-        // Activate Purchased Courses
-        // =========================
-
-        await _payments.MarkAsPaidAsync(
-            paymentId,
-            new CompletePaymentDto
+            // Already completed with this transaction.
+            if (string.Equals(
+                    payment.Status,
+                    "Paid",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                TransactionId = transactionReference
+                return string.Equals(
+                    payment.TransactionId,
+                    transactionReference,
+                    StringComparison.Ordinal);
             }
-        );
 
-        return true;
+            if (!string.Equals(
+                    payment.Status,
+                    "Pending",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            await _payments.MarkAsPaidAsync(
+                paymentId,
+                new CompletePaymentDto
+                {
+                    TransactionId = transactionReference
+                });
+
+            return true;
+        }
+
+        // ========================================
+        // Definitive Failed / Cancelled Payment
+        // ========================================
+
+        // Only treat these verified gateway outcomes
+        // as terminal failures.
+        //
+        // D = Declined
+        // C = Cancelled
+        // X = Expired
+
+        if (responseStatus is "D" or "C" or "X")
+        {
+            // Idempotent handling of repeated callbacks.
+            if (string.Equals(
+                    payment.Status,
+                    "Failed",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            // Never change an already paid transaction.
+            if (!string.Equals(
+                    payment.Status,
+                    "Pending",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            await _payments.MarkAsFailedAsync(paymentId);
+
+            return true;
+        }
+
+        // ========================================
+        // Unresolved Gateway Status
+        // ========================================
+
+        // H / P / E / V and unknown statuses require
+        // additional reconciliation.
+        //
+        // Never automatically mark them as failed.
+        // Never unlock a new payment attempt yet.
+
+        return false;
     }
+
 }

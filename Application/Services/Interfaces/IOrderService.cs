@@ -17,5 +17,11 @@ namespace Application.Services.Interfaces
                 int userId,
                 int orderId
             );
+
+
+        Task<OrderDto> CancelPendingAsync(
+            int userId,
+            int orderId);
+
     }
 }
