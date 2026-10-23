@@ -1,15 +1,22 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-// PayTabs returns the customer using POST.
-// This endpoint must never mark a payment as successful.
+// PayTabs may return the customer using POST.
+// This route only redirects the browser.
+// It must never confirm or finalize a payment.
 
 export function POST(request: NextRequest) {
   const orderId =
     request.nextUrl.searchParams.get("orderId");
 
+  const localeParam =
+    request.nextUrl.searchParams.get("locale");
+
+  const locale =
+    localeParam === "ar" ? "ar" : "en";
+
   const destination = new URL(
-    "/en/payment/result",
+    `/${locale}/payment/result`,
     request.nextUrl.origin
   );
 
@@ -21,9 +28,11 @@ export function POST(request: NextRequest) {
     destination.searchParams.set("orderId", orderId);
   }
 
-  // 303 converts the browser's POST navigation
-  // into a GET request to the result page.
-  const response = NextResponse.redirect(destination, 303);
+  // Convert PayTabs POST return to GET navigation.
+  const response = NextResponse.redirect(
+    destination,
+    303
+  );
 
   response.headers.set("Cache-Control", "no-store");
 

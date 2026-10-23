@@ -51,7 +51,11 @@ export async function GET(
 
     const data: unknown = await response.json();
 
-    if (!data || typeof data !== "object" || Array.isArray(data)) {
+    if (
+      !data ||
+      typeof data !== "object" ||
+      Array.isArray(data)
+    ) {
       return NextResponse.json(
         { message: "Invalid category response." },
         { status: 502 }

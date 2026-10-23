@@ -503,7 +503,7 @@ namespace Application.Services
                         user.Id,
 
                     Token =
-                        refreshTokenValue,
+                        _tokenService.HashToken(refreshTokenValue),
 
                     CreatedAt =
                         now,
@@ -693,7 +693,7 @@ namespace Application.Services
                         user.Id,
 
                     Token =
-                        newRefreshTokenValue,
+                        _tokenService.HashToken(newRefreshTokenValue),
 
                     CreatedAt =
                         now,
@@ -775,7 +775,7 @@ namespace Application.Services
                     .FirstOrDefaultAsync(
                         rt =>
                             rt.Token ==
-                            tokenValue
+                                _tokenService.HashToken(tokenValue)
                     );
 
 
@@ -1859,6 +1859,111 @@ namespace Application.Services
         </html>
         """;
         }
+
+        // ========================================
+        // Accept Instructor Invitation
+        // ========================================
+
+        public async Task AcceptInstructorInvitationAsync(
+            AcceptInstructorInvitationDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Token))
+            {
+                throw new InvalidOperationException(
+                    "Invalid or expired instructor invitation."
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Password) ||
+                dto.Password.Length < 8 ||
+                dto.Password.Length > 128)
+            {
+                throw new ArgumentException(
+                    "Password must contain 8 to 128 characters."
+                );
+            }
+
+            var tokenHash = _tokenService.HashToken(
+                dto.Token.Trim()
+            );
+
+            var invitation = await _userTokenRepo
+                .FirstOrDefaultAsync(
+                    token =>
+                        token.TokenHash == tokenHash &&
+                        token.Purpose ==
+                            UserTokenPurpose.InstructorInvitation
+                );
+
+            var now = DateTime.UtcNow;
+
+            if (invitation == null ||
+                invitation.IsUsed ||
+                invitation.ExpiresAt <= now)
+            {
+                throw new InvalidOperationException(
+                    "Invalid or expired instructor invitation."
+                );
+            }
+
+            var user = await _userRepo.GetByIdAsync(
+                invitation.UserId
+            );
+
+            if (user == null ||
+                !user.IsActive ||
+                user.EmailConfirmed)
+            {
+                throw new InvalidOperationException(
+                    "Invalid or expired instructor invitation."
+                );
+            }
+
+            // Verify the role before activating the account.
+            var instructorRole = await _roleRepo
+                .FirstOrDefaultAsync(
+                    role => role.Name == "Instructor"
+                );
+
+            if (instructorRole == null)
+            {
+                throw new InvalidOperationException(
+                    "Instructor role was not found."
+                );
+            }
+
+            var hasInstructorRole = await _userRoleRepo.ExistsAsync(
+                ur =>
+                    ur.UserId == user.Id &&
+                    ur.RoleId == instructorRole.Id
+            );
+
+            if (!hasInstructorRole)
+            {
+                throw new InvalidOperationException(
+                    "Instructor account is not valid."
+                );
+            }
+
+            // Activate the account by setting its real password.
+            user.PasswordHash = _passwordHasher.HashPassword(
+                user,
+                dto.Password
+            );
+
+            user.EmailConfirmed = true;
+            user.UpdatedAt = now;
+
+            invitation.IsUsed = true;
+            invitation.UsedAt = now;
+
+            _userRepo.Update(user);
+            _userTokenRepo.Update(invitation);
+
+            // All changes use the same scoped DbContext.
+            await _userRepo.SaveChangesAsync();
+        }
+
 
     }
 }

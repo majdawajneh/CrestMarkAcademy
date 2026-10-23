@@ -177,11 +177,6 @@ namespace Application.Services
             // Update Profile
             // =========================
 
-            profile.ProfileImageUrl =
-                NormalizeOptional(
-                    dto.ProfileImageUrl
-                );
-
             profile.Bio =
                 NormalizeOptional(
                     dto.Bio
@@ -222,6 +217,119 @@ namespace Application.Services
             );
         }
 
+
+        // ========================================
+        // Update Instructor Professional Profile
+        // ========================================
+
+        public async Task<ProfileDto> UpdateInstructorProfileAsync(
+            int userId,
+            UpdateInstructorProfileDto dto)
+        {
+            var user = await _userRepo.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                throw new KeyNotFoundException(
+                    "User was not found."
+                );
+            }
+
+            if (!user.IsActive || !user.EmailConfirmed)
+            {
+                throw new InvalidOperationException(
+                    "Instructor account is not active."
+                );
+            }
+
+            var profile = await _profileRepo.FirstOrDefaultAsync(
+                p => p.UserId == userId
+            );
+
+            if (profile == null)
+            {
+                profile = new UserProfile
+                {
+                    UserId = userId
+                };
+
+                await _profileRepo.AddAsync(profile);
+            }
+
+            // Validate professional information.
+            var professionalTitle =
+                NormalizeOptional(dto.ProfessionalTitle);
+
+            var bio = NormalizeOptional(dto.Bio);
+            var expertise = NormalizeOptional(dto.Expertise);
+            var experience = NormalizeOptional(dto.Experience);
+
+            if (professionalTitle?.Length > 150 ||
+                bio?.Length > 1000 ||
+                expertise?.Length > 1000 ||
+                experience?.Length > 3000)
+            {
+                throw new ArgumentException(
+                    "Instructor profile information exceeds the allowed length."
+                );
+            }
+
+            // Only secure HTTPS social links are accepted.
+            var linkedInUrl = NormalizeSecureUrl(dto.LinkedInUrl);
+            var gitHubUrl = NormalizeSecureUrl(dto.GitHubUrl);
+            var websiteUrl = NormalizeSecureUrl(dto.WebsiteUrl);
+            var youTubeUrl = NormalizeSecureUrl(dto.YouTubeUrl);
+
+            profile.ProfessionalTitle = professionalTitle;
+            profile.Bio = bio;
+            profile.Expertise = expertise;
+            profile.Experience = experience;
+
+            profile.LinkedInUrl = linkedInUrl;
+            profile.GitHubUrl = gitHubUrl;
+            profile.WebsiteUrl = websiteUrl;
+            profile.YouTubeUrl = youTubeUrl;
+
+            user.UpdatedAt = DateTime.UtcNow;
+
+            _userRepo.Update(user);
+
+            if (profile.Id != 0)
+            {
+                _profileRepo.Update(profile);
+            }
+
+            // Both repositories share the scoped DbContext.
+            await _userRepo.SaveChangesAsync();
+
+            return MapToDto(user, profile);
+        }
+
+        // ========================================
+        // Validate Secure URLs
+        // ========================================
+
+        private static string? NormalizeSecureUrl(string? value)
+        {
+            var url = NormalizeOptional(value);
+
+            if (url == null)
+            {
+                return null;
+            }
+
+            if (url.Length > 500 ||
+                !Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+                uri.Scheme != Uri.UriSchemeHttps ||
+                !string.IsNullOrEmpty(uri.UserInfo))
+            {
+                throw new ArgumentException(
+                    "Social links must be valid HTTPS URLs with a maximum of 500 characters."
+                );
+            }
+
+            return url;
+        }
 
         // =========================
         // Normalize Optional Text
@@ -287,7 +395,21 @@ namespace Application.Services
                     profile?.DateOfBirth,
 
                 CreatedAt =
-                    user.CreatedAt
+                    user.CreatedAt,
+
+                ProfessionalTitle = profile?.ProfessionalTitle,
+
+                Expertise = profile?.Expertise,
+
+                Experience = profile?.Experience,
+
+                LinkedInUrl = profile?.LinkedInUrl,
+
+                GitHubUrl = profile?.GitHubUrl,
+
+                WebsiteUrl = profile?.WebsiteUrl,
+
+                YouTubeUrl = profile?.YouTubeUrl,
             };
         }
     }

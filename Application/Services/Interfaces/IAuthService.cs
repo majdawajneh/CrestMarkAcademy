@@ -17,5 +17,6 @@ namespace Application.Services.Interfaces
         Task ForgotPasswordAsync(ForgotPasswordDto dto);
         Task ResetPasswordAsync(ResetPasswordDto dto);
         Task ChangePasswordAsync(int userId, ChangePasswordDto dto);
+        Task AcceptInstructorInvitationAsync(AcceptInstructorInvitationDto dto);
     }
 }

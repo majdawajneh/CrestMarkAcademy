@@ -196,6 +196,48 @@ function playableUrl(value: string | null) {
   }
   return null;
 }
+
+function getYouTubeEmbedUrl(value: string | null): string | null {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+
+    if (url.protocol !== "https:") {
+      return null;
+    }
+
+    const host = url.hostname.toLowerCase();
+    let videoId: string | null = null;
+
+    if (host === "youtu.be" || host === "www.youtu.be") {
+      videoId = url.pathname.split("/")[1] ?? null;
+    } else if (
+      host === "youtube.com" ||
+      host === "www.youtube.com" ||
+      host === "m.youtube.com"
+    ) {
+      if (url.pathname === "/watch") {
+        videoId = url.searchParams.get("v");
+      } else if (
+        url.pathname.startsWith("/embed/") ||
+        url.pathname.startsWith("/shorts/") ||
+        url.pathname.startsWith("/live/")
+      ) {
+        videoId = url.pathname.split("/")[2] ?? null;
+      }
+    }
+
+    if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+      return null;
+    }
+
+    return `https://www.youtube-nocookie.com/embed/${videoId}`;
+  } catch {
+    return null;
+  }
+}
+
 function formatDuration(seconds: number) {
   const value = Math.max(0, Math.floor(seconds || 0));
   return `${Math.floor(value / 60)}:${String(
@@ -540,8 +582,11 @@ function LearnCourseContent() {
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const [progressAttempt, setProgressAttempt] = useState(0);
-  const [courseCertificate, setCourseCertificate] = useState<CourseCertificate | null>(null);
-  const [certificateState, setCertificateState] = useState<CertificateState>("idle");
+  const [certificateResult, setCertificateResult] = useState<{
+    enrollmentId: number;
+    state: "issued" | "pending" | "error";
+    certificate: CourseCertificate | null;
+  } | null>(null);
   const [certificateAttempt, setCertificateAttempt] = useState(0);
   const [downloadingCertificate, setDownloadingCertificate] = useState(false);
   const [certificateDownloadError, setCertificateDownloadError] = useState("");
@@ -834,11 +879,16 @@ function LearnCourseContent() {
   // =====================================
   // Restore progress without selecting lessons
   // =====================================
-  useEffect(() => {
-    if (!course || status !== "ready") return;
-    let cancelled = false;
-    async function restore() {
-      const accessible = course!.sections
+  
+useEffect(() => {
+  if (!course || status !== "ready") return;
+
+  const currentCourse = course;
+  let cancelled = false;
+
+  async function restore() {
+
+      const accessible = currentCourse.sections
         .flatMap((section) => section.lessons)
         .filter((item) => !item.isLocked);
       const restored: Record<number, ProgressState> = {};
@@ -874,9 +924,12 @@ function LearnCourseContent() {
       // Deliberately no setSelectedId() here.
       // Video progress must never change
       // the student's selected lesson.
+      if (!cancelled) {
+        void reloadProgress(currentCourse.courseId);
+      }
     }
     void restore();
-    void reloadProgress(course.courseId);
+    
     return () => {
       cancelled = true;
     };
@@ -889,24 +942,33 @@ function LearnCourseContent() {
   ]);
   // Load the certificate for the exact completed enrollment only.
   const completedEnrollmentId =
-    course && progress?.courseId === course.courseId &&
-    progress.isCourseCompleted && progress.totalLessons > 0 &&
+    course &&
+    progress?.courseId === course.courseId &&
+    progress.isCourseCompleted &&
+    progress.totalLessons > 0 &&
     progress.completedLessons === progress.totalLessons
       ? progress.enrollmentId
       : null;
 
-  useEffect(() => {
-    let cancelled = false;
-    setCourseCertificate(null);
-    setCertificateDownloadError("");
+  // Keep certificate UI scoped to the current enrollment.
+  // The previous enrollment's certificate/status must never appear here.
+  const currentCertificateResult =
+    certificateResult?.enrollmentId === completedEnrollmentId
+      ? certificateResult
+      : null;
+  const courseCertificate = currentCertificateResult?.certificate ?? null;
+  const certificateState: CertificateState =
+    completedEnrollmentId === null
+      ? "idle"
+      : currentCertificateResult?.state ?? "loading";
 
-    if (completedEnrollmentId === null) {
-      setCertificateState("idle");
-      return () => { cancelled = true; };
-    }
+  useEffect(() => {
+    if (completedEnrollmentId === null) return;
+
+    let cancelled = false;
+    const enrollmentId = completedEnrollmentId;
 
     async function loadCertificate() {
-      setCertificateState("loading");
       try {
         const response = await authenticatedRequest(() =>
           fetch("/api/certificates/my", {
@@ -915,32 +977,67 @@ function LearnCourseContent() {
             cache: "no-store",
           })
         );
+
         if (cancelled) return;
+
         if (!response.ok) {
-          setCertificateState("error");
+          setCertificateResult({
+            enrollmentId,
+            state: "error",
+            certificate: null,
+          });
           return;
         }
+
         const data: unknown = await response.json();
         if (cancelled) return;
+
         if (!Array.isArray(data)) {
-          setCertificateState("error");
+          setCertificateResult({
+            enrollmentId,
+            state: "error",
+            certificate: null,
+          });
           return;
         }
+
         const matched = data.find((item: unknown) => {
-          if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+          if (!item || typeof item !== "object" || Array.isArray(item)) {
+            return false;
+          }
+
           const value = item as Record<string, unknown>;
-          return value.enrollmentId === completedEnrollmentId &&
-            typeof value.id === "number" && Number.isSafeInteger(value.id) && value.id > 0 &&
-            typeof value.certificateNumber === "string" && value.certificateNumber.trim().length > 0;
+          return (
+            value.enrollmentId === enrollmentId &&
+            typeof value.id === "number" &&
+            Number.isSafeInteger(value.id) &&
+            value.id > 0 &&
+            typeof value.certificateNumber === "string" &&
+            value.certificateNumber.trim().length > 0
+          );
         }) as CourseCertificate | undefined;
-        setCourseCertificate(matched ?? null);
-        setCertificateState(matched ? "issued" : "pending");
+
+        setCertificateResult({
+          enrollmentId,
+          state: matched ? "issued" : "pending",
+          certificate: matched ?? null,
+        });
+        setCertificateDownloadError("");
       } catch {
-        if (!cancelled) setCertificateState("error");
+        if (!cancelled) {
+          setCertificateResult({
+            enrollmentId,
+            state: "error",
+            certificate: null,
+          });
+        }
       }
     }
+
     void loadCertificate();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [completedEnrollmentId, certificateAttempt]);
 
   async function downloadCertificate() {
@@ -1027,6 +1124,7 @@ function LearnCourseContent() {
   const video = lesson
     ? playableUrl(lesson.videoUrl)
     : null;
+  const youtubeEmbed = getYouTubeEmbedUrl(video);
   const audio = lesson
     ? playableUrl(lesson.audioUrl)
     : null;
@@ -1341,7 +1439,9 @@ function LearnCourseContent() {
           href={`/${locale}/my-learning`}
           className={styles.back}
         >
-          <span aria-hidden="true">←</span>{" "}
+          <span aria-hidden="true">
+            {locale === "ar" ? "→" : "←"}
+          </span>{" "}
           {t.back}
         </Link>
         <span className={styles.courseName}>
@@ -1381,39 +1481,61 @@ function LearnCourseContent() {
                   >
                     {t.locked}
                   </div>
-                ) : kind === "video" && video ? (
-                  <video
-                    key={lesson.id}
-                    ref={(node) => {
-                      mediaRef.current = node;
-                    }}
-                    className={styles.media}
-                    src={video}
-                    controls
-                    controlsList="nodownload"
-                    preload="metadata"
-                    onLoadedMetadata={(event) => {
-                      restoreMediaPosition(
-                        event.currentTarget,
-                        savedPosition
-                      );
-                    }}
-                    onTimeUpdate={(event) => {
-                      handleMediaTimeUpdate(
-                        event.currentTarget
-                      );
-                    }}
-                    onPause={(event) => {
-                      handleMediaPause(
-                        event.currentTarget
-                      );
-                    }}
-                    onEnded={(event) => {
-                      handleMediaEnded(
-                        event.currentTarget
-                      );
-                    }}
-                  />
+                
+) : kind === "video" && video ? (
+  youtubeEmbed ? (
+    <iframe
+      key={lesson.id}
+      src={youtubeEmbed}
+      title={lesson.title}
+      className={styles.media}
+      style={{
+        display: "block",
+        width: "100%",
+        height: "100%",
+        border: 0,
+        aspectRatio: "16 / 9",
+      }}
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      referrerPolicy="strict-origin-when-cross-origin"
+      allowFullScreen
+    />
+  ) : (
+    <video
+      key={lesson.id}
+      ref={(node) => {
+        mediaRef.current = node;
+      }}
+      className={styles.media}
+      src={video}
+      controls
+      controlsList="nodownload"
+      preload="metadata"
+      onLoadedMetadata={(event) => {
+        restoreMediaPosition(
+          event.currentTarget,
+          savedPosition
+        );
+      }}
+      onTimeUpdate={(event) => {
+        handleMediaTimeUpdate(
+          event.currentTarget
+        );
+      }}
+      onPause={(event) => {
+        handleMediaPause(
+          event.currentTarget
+        );
+      }}
+      onEnded={(event) => {
+        handleMediaEnded(
+          event.currentTarget
+        );
+      }}
+    />
+  )
+
+                  
                 ) : kind === "audio" && audio ? (
                   <div className={styles.audioArea}>
                     <span className={styles.audioMark}>

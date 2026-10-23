@@ -24,6 +24,15 @@ type User = {
   createdAt: string | null;
 };
 
+type UserDetails = User & {
+  profileImageUrl: string | null;
+  bio: string | null;
+  phoneNumber: string | null;
+  country: string | null;
+  dateOfBirth: string | null;
+  updatedAt: string | null;
+};
+
 type Course = {
   id: number;
   title: string;
@@ -99,7 +108,20 @@ const dictionary = {
     noUsers: "No users were returned by the API.",
     details: "Account details",
     detailsHint:
-      "Manage account status, instructor access, and course enrollment.",
+      "Review personal information, account access, and course enrollments.",
+    personalDetails: "Personal information",
+    contactDetails: "Contact details",
+    firstName: "First name",
+    lastName: "Last name",
+    phoneNumber: "Phone number",
+    country: "Country",
+    birthDate: "Date of birth",
+    biography: "Biography",
+    updated: "Last updated",
+    detailsLoading: "Loading full profile...",
+    detailsError: "Unable to load this user's full profile.",
+    detailsRetry: "Retry details",
+    photoUnavailable: "User profile photos require a separate admin-authorized image endpoint.",
     close: "Close",
     accountStatus: "Account status",
     emailStatus: "Email verification",
@@ -196,7 +218,20 @@ const dictionary = {
     noUsers: "لم يرجع API أي مستخدمين.",
     details: "تفاصيل الحساب",
     detailsHint:
-      "أدر حالة الحساب وصلاحية المدرّس والالتحاق بالدورات.",
+      "راجع المعلومات الشخصية وصلاحيات الحساب والالتحاقات.",
+    personalDetails: "المعلومات الشخصية",
+    contactDetails: "معلومات التواصل",
+    firstName: "الاسم الأول",
+    lastName: "اسم العائلة",
+    phoneNumber: "رقم الهاتف",
+    country: "الدولة",
+    birthDate: "تاريخ الميلاد",
+    biography: "النبذة الشخصية",
+    updated: "آخر تعديل",
+    detailsLoading: "جارٍ تحميل الملف الشخصي الكامل...",
+    detailsError: "تعذّر تحميل التفاصيل الكاملة لهذا المستخدم.",
+    detailsRetry: "إعادة المحاولة",
+    photoUnavailable: "عرض صور المستخدمين يحتاج مسار صور مخصصًا ومحميًا بصلاحية الإدارة.",
     close: "إغلاق",
     accountStatus: "حالة الحساب",
     emailStatus: "تأكيد البريد",
@@ -339,6 +374,24 @@ function parseUser(value: unknown): User | null {
       typeof value.createdAt === "string"
         ? value.createdAt
         : null,
+  };
+}
+
+function parseUserDetails(value: unknown): UserDetails | null {
+  const user = parseUser(value);
+  if (!user || !isRecord(value)) return null;
+
+  const optionalText = (item: unknown): string | null =>
+    typeof item === "string" ? item : null;
+
+  return {
+    ...user,
+    profileImageUrl: optionalText(value.profileImageUrl),
+    bio: optionalText(value.bio),
+    phoneNumber: optionalText(value.phoneNumber),
+    country: optionalText(value.country),
+    dateOfBirth: optionalText(value.dateOfBirth),
+    updatedAt: optionalText(value.updatedAt),
   };
 }
 
@@ -558,6 +611,11 @@ export default function AdminStudentsPage() {
   const [selectedUserId, setSelectedUserId] =
     useState<number | null>(null);
 
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState("");
+  const [detailsVersion, setDetailsVersion] = useState(0);
+
   const [selectedCourseId, setSelectedCourseId] =
     useState("");
 
@@ -715,8 +773,17 @@ export default function AdminStudentsPage() {
   }, [t.requestError]);
 
   useEffect(() => {
-    void loadUsers();
-    void loadCourses();
+    // Defer these calls: both loaders update loading state before awaiting fetch.
+    // Starting them in a microtask avoids synchronous state updates in an effect.
+    let active = true;
+    void Promise.resolve().then(() => {
+      if (!active) return;
+      void loadUsers();
+      void loadCourses();
+    });
+    return () => {
+      active = false;
+    };
   }, [loadUsers, loadCourses]);
 
   // ======================================
@@ -751,17 +818,54 @@ export default function AdminStudentsPage() {
     [courses]
   );
 
+  // Load full profile from the admin-only user-details endpoint.
+  // It is deliberately separate from the summary user directory.
+  useEffect(() => {
+    if (selectedUserId === null) return;
+    const controller = new AbortController();
+
+    async function loadDetails() {
+      try {
+        const response = await fetch(
+          `/api/admin/users/${selectedUserId}`,
+          {
+            credentials: "same-origin",
+            cache: "no-store",
+            signal: controller.signal,
+          }
+        );
+        const body = await getResponseData(response);
+        if (controller.signal.aborted) return;
+        if (!response.ok) {
+          throw new Error(apiError(body, t.detailsError));
+        }
+        const parsed = parseUserDetails(body);
+        if (!parsed || parsed.id !== selectedUserId) {
+          throw new Error(t.detailsError);
+        }
+        setUserDetails(parsed);
+        setDetailsError("");
+      } catch (cause) {
+        if (controller.signal.aborted) return;
+        setDetailsError(
+          cause instanceof Error ? cause.message : t.detailsError
+        );
+      } finally {
+        if (!controller.signal.aborted) setDetailsLoading(false);
+      }
+    }
+
+    void loadDetails();
+    return () => controller.abort();
+  }, [selectedUserId, detailsVersion, t.detailsError]);
+
   // ======================================
   // Load all user enrollments
   // ======================================
 
   useEffect(() => {
-    if (!selectedUserId) {
-      setStudentEnrollments([]);
-      setStudentEnrollmentsError("");
-      setStudentEnrollmentsLoading(false);
-      return;
-    }
+    // Selection handlers already clear the previous user's enrollment data.
+    if (!selectedUserId) return;
 
     const controller = new AbortController();
 
@@ -844,10 +948,8 @@ export default function AdminStudentsPage() {
   // ======================================
 
   useEffect(() => {
-    if (!selectedUserId || !selectedCourseId) {
-      setEnrollmentState({ kind: "idle" });
-      return;
-    }
+    // Clear stale selected-course state in selection handlers, not the effect.
+    if (!selectedUserId || !selectedCourseId) return;
 
     const controller = new AbortController();
 
@@ -1037,6 +1139,9 @@ export default function AdminStudentsPage() {
   // ======================================
 
   function openUser(user: User) {
+    setUserDetails(null);
+    setDetailsError("");
+    setDetailsLoading(true);
     setSelectedUserId(user.id);
     setSelectedCourseId("");
     setEnrollmentState({ kind: "idle" });
@@ -1048,6 +1153,8 @@ export default function AdminStudentsPage() {
   function closeUser() {
     if (actionBusy) return;
     setSelectedUserId(null);
+    setUserDetails(null);
+    setDetailsError("");
     setSelectedCourseId("");
   }
 
@@ -1143,6 +1250,10 @@ export default function AdminStudentsPage() {
         );
       } else {
         await loadUsers();
+        if (selectedUserId === action.user.id) {
+          setDetailsLoading(true);
+          setDetailsVersion((value) => value + 1);
+        }
       }
     } catch (cause) {
       setActionError(
@@ -1674,6 +1785,70 @@ export default function AdminStudentsPage() {
                   </strong>
                 </div>
               </div>
+
+              {/* ADMIN-ONLY FULL PROFILE */}
+              <section className={styles.panelSection}>
+                <h3>{t.personalDetails}</h3>
+                {detailsLoading ? (
+                  <p className={styles.helperText} role="status">
+                    {t.detailsLoading}
+                  </p>
+                ) : detailsError ? (
+                  <div className={styles.inlineError} role="alert">
+                    {detailsError}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDetailsLoading(true);
+                        setDetailsError("");
+                        setDetailsVersion((value) => value + 1);
+                      }}
+                    >
+                      {t.detailsRetry}
+                    </button>
+                  </div>
+                ) : userDetails ? (
+                  <>
+                    <dl className={styles.personalDetailsGrid}>
+                      <div>
+                        <dt>{t.firstName}</dt>
+                        <dd>{userDetails.firstName || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>{t.lastName}</dt>
+                        <dd>{userDetails.lastName || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>{t.phoneNumber}</dt>
+                        <dd dir="auto">{userDetails.phoneNumber || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>{t.country}</dt>
+                        <dd>{userDetails.country || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>{t.birthDate}</dt>
+                        <dd>{formatDate(userDetails.dateOfBirth, locale)}</dd>
+                      </div>
+                      <div>
+                        <dt>{t.updated}</dt>
+                        <dd>{formatDate(userDetails.updatedAt, locale)}</dd>
+                      </div>
+                      <div className={styles.personalDetailsFull}>
+                        <dt>{t.biography}</dt>
+                        <dd className={styles.biography}>
+                          {userDetails.bio?.trim() || "—"}
+                        </dd>
+                      </div>
+                    </dl>
+                    {userDetails.profileImageUrl && (
+                      <p className={styles.helperText}>
+                        {t.photoUnavailable}
+                      </p>
+                    )}
+                  </>
+                ) : null}
+              </section>
 
               {/* ROLES AND ACCOUNT ACTIONS */}
               <section

@@ -317,8 +317,21 @@ public sealed class PayTabsService
 
             if (saved != 1)
             {
-                throw new InvalidOperationException(
-                    "Checkout reference could not be saved.");
+                // Callback may have saved the same reference first.
+                var currentReference = await _db.Payments
+                    .AsNoTracking()
+                    .Where(p => p.Id == payment.Id)
+                    .Select(p => p.GatewayTransactionReference)
+                    .SingleOrDefaultAsync(ct);
+
+                if (!string.Equals(
+                        currentReference,
+                        transactionReference,
+                        StringComparison.Ordinal))
+                {
+                    throw new InvalidOperationException(
+                        "Checkout reference could not be saved.");
+                }
             }
 
             return redirectUrl!;
@@ -428,12 +441,30 @@ public sealed class PayTabsService
         // Validate Stored Reference
         // =========================
 
-        if (string.IsNullOrWhiteSpace(
-                payment.GatewayTransactionReference) ||
+        // A different stored reference must never be overwritten.
+        if (!string.IsNullOrWhiteSpace(
+                payment.GatewayTransactionReference) &&
             !string.Equals(
                 payment.GatewayTransactionReference,
                 transactionReference,
                 StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        // An unknown reference can only be recovered for
+        // a pending checkout in a recoverable state.
+        var needsReferenceRecovery =
+            string.IsNullOrWhiteSpace(
+                payment.GatewayTransactionReference);
+
+        if (needsReferenceRecovery &&
+            (!string.Equals(
+                payment.Status,
+                "Pending",
+                StringComparison.OrdinalIgnoreCase) ||
+             payment.CheckoutStatus is not
+                ("Initializing" or "NeedsReconciliation")))
         {
             return false;
         }
@@ -534,6 +565,59 @@ public sealed class PayTabsService
         }
 
         // ========================================
+        // Recover Missing Gateway Reference
+        // ========================================
+
+        // At this point, the gateway query has validated:
+        // - Transaction reference
+        // - Cart ID and payment ID
+        // - Payment provider
+        // - Profile (when returned)
+        // - Transaction type
+        // - Currency
+        // - Amount
+        // - Payment result structure
+
+        if (needsReferenceRecovery)
+        {
+            var updated = await _db.Payments
+                .Where(p =>
+                    p.Id == paymentId &&
+                    p.Status == "Pending" &&
+                    p.PaymentProvider == "PayTabs" &&
+                    p.GatewayTransactionReference == null &&
+                    (p.CheckoutStatus == "Initializing" ||
+                     p.CheckoutStatus == "NeedsReconciliation"))
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(
+                            p => p.GatewayTransactionReference,
+                            transactionReference)
+                        .SetProperty(
+                            p => p.CheckoutStatus,
+                            "Ready"),
+                    ct);
+
+            if (updated != 1)
+            {
+                // Another request may have recovered the
+                // same reference concurrently.
+                var currentReference = await _db.Payments
+                    .AsNoTracking()
+                    .Where(p => p.Id == paymentId)
+                    .Select(p => p.GatewayTransactionReference)
+                    .SingleOrDefaultAsync(ct);
+
+                if (!string.Equals(
+                        currentReference,
+                        transactionReference,
+                        StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+        }
+        // ========================================
         // Successful Payment
         // ========================================
 
@@ -616,6 +700,126 @@ public sealed class PayTabsService
         // Never unlock a new payment attempt yet.
 
         return false;
+    }
+    // ========================================
+    // Reconcile Existing PayTabs Payment
+    // ========================================
+
+    public async Task<string> ReconcileAsync(
+        int paymentId,
+        CancellationToken ct)
+    {
+        // Load the payment without tracking.
+        var payment = await _db.Payments
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                p => p.Id == paymentId,
+                ct);
+
+        if (payment == null)
+            return "PaymentNotFound";
+
+        if (!string.Equals(
+            payment.PaymentProvider,
+            "PayTabs",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return "InvalidProvider";
+        }
+
+        if (payment.Status == "Paid")
+            return "AlreadyPaid";
+
+        if (payment.Status == "Failed")
+            return "AlreadyFailed";
+
+        if (payment.Status != "Pending")
+            return "InvalidStatus";
+
+        // Never attempt reconciliation before checkout starts.
+        if (payment.CheckoutStatus is not
+            ("Initializing" or
+             "NeedsReconciliation" or
+             "Ready"))
+        {
+            return "CheckoutNotStarted";
+        }
+
+        // If we already know the transaction reference,
+        // verify it directly with PayTabs.
+        if (!string.IsNullOrWhiteSpace(
+            payment.GatewayTransactionReference))
+        {
+            var confirmed = await ConfirmAsync(
+                payment.GatewayTransactionReference,
+                ct);
+
+            return confirmed
+                ? "Processed"
+                : "Unresolved";
+        }
+
+        // We don't have tran_ref, so query by cart_id.
+        var settings = Settings();
+
+        var cartId = $"{CartPrefix}{payment.Id}";
+
+        using var reply = await SendAsync(
+            "/payment/query",
+            new
+            {
+                profile_id = settings.ProfileId,
+                cart_id = cartId
+            },
+            ct);
+
+        var root = reply.RootElement;
+
+        // A cart query must return an array.
+        // Unexpected responses must not change payment state.
+        if (root.ValueKind != JsonValueKind.Array)
+            return "UnexpectedGatewayResponse";
+
+        if (root.GetArrayLength() == 0)
+            return "NoTransactionsFound";
+
+        // Never select a transaction arbitrarily.
+        if (root.GetArrayLength() > 1)
+            return "MultipleTransactionsFound";
+
+        var transaction = root[0];
+
+        if (transaction.ValueKind != JsonValueKind.Object)
+            return "UnexpectedGatewayResponse";
+
+        if (!string.Equals(
+            ReadString(transaction, "cart_id"),
+            cartId,
+            StringComparison.Ordinal))
+        {
+            return "CartMismatch";
+        }
+
+        var reference = ReadString(
+            transaction,
+            "tran_ref");
+
+        if (string.IsNullOrWhiteSpace(reference) ||
+            reference.Length > 128)
+        {
+            return "InvalidTransactionReference";
+        }
+
+        // ConfirmAsync queries PayTabs again and validates:
+        // reference, cart, profile, type, amount and currency.
+        // It is the only place that finalizes the payment.
+        var processed = await ConfirmAsync(
+            reference,
+            ct);
+
+        return processed
+            ? "Processed"
+            : "Unresolved";
     }
 
 }

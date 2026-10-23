@@ -1,5 +1,4 @@
-﻿
-using Application.Dto_s.User;
+﻿using Application.Dto_s.User;
 
 namespace Application.Services.Interfaces
 {
@@ -23,5 +22,12 @@ namespace Application.Services.Interfaces
         Task AssignInstructorAsync(int userId);
 
         Task RemoveInstructorAsync(int userId);
+
+        // Create instructor account and send invitation
+        Task<AdminUserDetailsDto> CreateInstructorAsync(
+            CreateInstructorDto dto
+        );
+        // Resend invitation to an existing instructor
+        Task ResendInstructorInvitationAsync(int userId);
     }
 }

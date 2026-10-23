@@ -1,185 +1,301 @@
 
+/* ==========================================
+   CRESTMARK — COURSE LEARNING PLAYER
+   Premium Learning Workspace
+   ========================================== */
+
 .page {
-  min-height: calc(100vh - 82px);
-  background: #f7faff;
-  color: #142e50;
+  --cm-navy: #102a52;
+  --cm-blue: #2563eb;
+  --cm-text: #183657;
+  --cm-muted: #697f99;
+  --cm-border: #e0e9f3;
+  --cm-soft: #f3f8fe;
+
+  min-height: calc(100vh - 76px);
+  background: #f7f9fd;
+  color: var(--cm-text);
 }
+
+/* ==========================================
+   TOP BAR
+   ========================================== */
 
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 25px;
-  padding: 23px clamp(24px, 4vw, 66px);
+  gap: 24px;
+  min-height: 76px;
+  padding: 16px clamp(24px, 4vw, 64px);
   background: #ffffff;
-  border-bottom: 1px solid #e4ebf4;
+  border-bottom: 1px solid var(--cm-border);
 }
 
 .back {
-  color: #2862a1;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 10px;
+  min-height: 40px;
+  color: #235d9e;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 800;
   text-decoration: none;
-  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.back:hover {
+  color: var(--cm-blue);
 }
 
 .courseName {
-  max-width: 580px;
+  display: block;
+  max-width: 560px;
   overflow: hidden;
-  color: #71839a;
+  color: #657f9a;
   font-size: 13px;
+  font-weight: 650;
+  text-align: end;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* ==========================================
+   WORKSPACE
+   ========================================== */
+
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 355px;
-  width: min(1550px, 100%);
-  min-height: calc(100vh - 170px);
-  margin: 0 auto;
+  grid-template-columns:
+    minmax(0, 1fr) minmax(320px, 355px);
+  align-items: stretch;
+  width: min(100%, 1640px);
+  min-height: calc(100vh - 152px);
+  margin-inline: auto;
 }
 
 .mainColumn {
   min-width: 0;
-  padding: 39px clamp(22px, 4vw, 65px) 90px;
+  padding:
+    46px
+    clamp(24px, 4.1vw, 68px)
+    95px;
 }
 
+/* ==========================================
+   LESSON HEADER
+   ========================================== */
+
 .lessonHeading {
-  margin-bottom: 25px;
+  max-width: 950px;
+  margin-bottom: 28px;
 }
 
 .eyebrow {
-  color: #3972b0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #3279c5;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 24px;
+  height: 2px;
+  background: var(--cm-blue);
 }
 
 .lessonHeading h1 {
-  margin: 12px 0 0;
-  color: #102a52;
-  font-size: clamp(24px, 3.1vw, 35px);
+  margin: 14px 0 0;
+  color: var(--cm-navy);
+  font-size: clamp(27px, 3vw, 40px);
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.3;
+  letter-spacing: -0.038em;
+  overflow-wrap: anywhere;
 }
 
+/* ==========================================
+   MEDIA PLAYER
+   ========================================== */
+
 .player {
+  position: relative;
+  width: 100%;
   overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid #dbe5f1;
-  background: #102a52;
+  border: 1px solid #233f65;
+  border-radius: 13px;
+  background: #091629;
+  box-shadow:
+    0 16px 38px rgba(16, 42, 82, 0.11);
 }
 
 .media {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: #09172d;
+  border: 0;
+  background: #070f1e;
   object-fit: contain;
+}
+
+.player iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+}
+
+.player video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #070f1e;
 }
 
 .playerPlaceholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 330px;
-  padding: 35px;
-  color: #d6e5fa;
-  text-align: center;
+  min-height: 340px;
+  padding: 45px;
+  background: #10233d;
+  color: #d6e6f7;
   font-size: 15px;
-  line-height: 1.8;
+  line-height: 1.9;
+  text-align: center;
 }
+
+/* ==========================================
+   AUDIO PLAYER
+   ========================================== */
 
 .audioArea {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 36px;
-  padding: 60px 35px;
+  gap: 35px;
+  min-height: 345px;
+  padding: 54px 35px;
+  background:
+    linear-gradient(135deg, #0c203b, #173c69);
 }
 
 .audioMark {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 90px;
-  height: 90px;
+  width: 96px;
+  height: 96px;
+  border: 1px solid rgba(255, 255, 255, 0.19);
   border-radius: 50%;
-  background: #244978;
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
-  font-size: 48px;
+  font-size: 49px;
+  font-weight: 400;
 }
 
 .audioArea audio {
   display: block;
-  width: min(100%, 550px);
+  width: min(100%, 560px);
 }
+
+/* ==========================================
+   TEXT LESSON
+   ========================================== */
 
 .textLesson {
-  min-height: 260px;
-  padding: 36px;
+  min-height: 280px;
+  padding: clamp(25px, 4vw, 48px);
   background: #ffffff;
-  color: #294666;
+  color: #294765;
+  font-size: 15px;
+  line-height: 2;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  line-height: 1.95;
-  font-size: 15px;
 }
 
+/* ==========================================
+   LESSON DESCRIPTION
+   ========================================== */
+
 .description {
-  margin-top: 30px;
-  padding-bottom: 28px;
-  border-bottom: 1px solid #e0e8f2;
+  margin-top: 40px;
+  padding: 0 0 33px;
+  border-bottom: 1px solid var(--cm-border);
 }
 
 .description h2 {
-  margin-bottom: 12px;
-  font-size: 19px;
+  margin: 0 0 15px;
+  color: var(--cm-navy);
+  font-size: 23px;
   font-weight: 800;
-  color: #102a52;
+  letter-spacing: -0.025em;
 }
 
 .description p {
-  color: #6c8098;
+  max-width: 850px;
+  margin: 0;
+  color: #637a94;
   font-size: 14px;
-  line-height: 1.9;
+  line-height: 2;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
+
+/* ==========================================
+   LESSON NAVIGATION
+   ========================================== */
 
 .lessonActions {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 18px;
-  margin-top: 25px;
+  gap: 20px;
+  margin-top: 32px;
 }
 
 .navigation {
-  display: flex;
-  gap: 10px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 11px;
 }
 
 .navigation button {
-  min-height: 43px;
-  padding: 10px 16px;
-  border: 1px solid #cddae9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 47px;
+  padding: 11px 19px;
+  border: 1px solid #d4e1f0;
   border-radius: 8px;
   background: #ffffff;
-  color: #245586;
+  color: #2b5a8a;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 750;
   cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .navigation button:hover:not(:disabled) {
-  background: #eaf3ff;
+  background: #edf5ff;
+  border-color: #a9cbed;
+  transform: translateY(-1px);
 }
 
 .navigation button:disabled {
-  opacity: 0.4;
+  opacity: 0.42;
   cursor: not-allowed;
 }
 
@@ -187,137 +303,209 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 11px 21px;
-  border: none;
+  min-height: 48px;
+  padding: 12px 22px;
+  border: 1px solid var(--cm-blue);
   border-radius: 8px;
-  background: #2669b5;
+  background: var(--cm-blue);
   color: #ffffff;
   font: inherit;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .primary:hover:not(:disabled) {
-  background: #195496;
+  background: #1d4ed8;
+  transform: translateY(-2px);
 }
 
 .primary:disabled {
-  opacity: 0.65;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
+/* ==========================================
+   ERRORS & INLINE FEEDBACK
+   ========================================== */
+
 .error {
-  margin-top: 17px;
-  color: #c13851;
+  margin-top: 20px;
+  padding: 13px 16px;
+  border: 1px solid #f0d6d8;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #b33b48;
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
+.error button {
+  margin-inline-start: 10px;
+  border: 0;
+  background: transparent;
+  color: #993143;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ==========================================
+   COURSE CONTENT SIDEBAR
+   ========================================== */
+
 .sidebar {
-  background: #ffffff;
-  border-inline-start: 1px solid #e1e9f4;
+  position: relative;
   min-width: 0;
+  border-inline-start: 1px solid var(--cm-border);
+  background: #ffffff;
 }
 
 .sideHeader {
-  padding: 32px 23px 20px;
-  border-bottom: 1px solid #e7edf5;
+  padding: 33px 25px 25px;
+  border-bottom: 1px solid #e8eef5;
 }
 
 .sideHeader h2 {
-  margin: 0 0 8px;
-  font-size: 19px;
+  margin: 0 0 10px;
+  color: var(--cm-navy);
+  font-size: 21px;
   font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
 .sideHeader > span {
-  color: #7b8da2;
+  color: #8193a9;
   font-size: 12px;
+  font-weight: 600;
 }
 
+/* ==========================================
+   PROGRESS PANEL
+   ========================================== */
+
 .progressBox {
-  padding: 23px;
-  border-bottom: 1px solid #e7edf5;
+  padding: 25px;
+  border-bottom: 1px solid #e8eef5;
+  background: #f8fbff;
 }
 
 .progressLabels {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-  color: #5c738d;
+  gap: 15px;
+  margin-bottom: 13px;
+  color: #607892;
   font-size: 12px;
+  font-weight: 700;
 }
 
 .progressLabels strong {
-  color: #1c5b9e;
-  font-size: 14px;
+  color: #195da8;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .progressTrack {
-  height: 7px;
-  background: #e9eff7;
-  border-radius: 20px;
+  width: 100%;
+  height: 8px;
   overflow: hidden;
+  border-radius: 100px;
+  background: #e4edf8;
 }
 
 .progressFill {
   height: 100%;
   border-radius: inherit;
-  background: #2a76c8;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, #2563eb, #3296db);
+  transition: width 0.4s ease;
 }
 
 .progressBox p {
-  margin-top: 10px;
-  color: #8a9bae;
+  margin: 12px 0 0;
+  color: #8799ad;
   font-size: 11px;
+  line-height: 1.6;
+}
+
+/* ==========================================
+   COURSE SECTIONS
+   ========================================== */
+
+.sections {
+  padding-bottom: 35px;
 }
 
 .section {
-  padding: 22px 15px;
-  border-bottom: 1px solid #edf1f7;
+  padding: 25px 15px 20px;
+  border-bottom: 1px solid #edf1f6;
+}
+
+.section:last-child {
+  border-bottom: 0;
 }
 
 .section h3 {
-  margin: 0 8px 17px;
+  margin: 0 10px 15px;
+  color: #17385b;
   font-size: 13px;
   font-weight: 800;
-  line-height: 1.7;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
 }
+
+/* ==========================================
+   LESSON ITEMS
+   ========================================== */
 
 .lessonItem {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   width: 100%;
-  padding: 13px 11px;
+  min-height: 61px;
+  margin-bottom: 5px;
+  padding: 12px 11px;
   border: 1px solid transparent;
   border-radius: 9px;
   background: transparent;
-  color: #385270;
+  color: #45617e;
   font: inherit;
   text-align: start;
   cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .lessonItem:hover:not(:disabled) {
-  background: #f0f6fd;
+  background: #f3f8fe;
+  color: #164e8a;
 }
 
 .current {
+  border-color: #c9def9;
   background: #eaf3ff;
-  border-color: #cde1f9;
-  color: #164c89;
+  color: #14539a;
+}
+
+.lessonItem.current:hover:not(:disabled) {
+  background: #e3efff;
 }
 
 .lessonItem:disabled {
-  cursor: not-allowed;
   opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .lessonSymbol {
@@ -325,31 +513,48 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 27px;
-  height: 27px;
-  border-radius: 7px;
-  background: #edf3fa;
-  color: #2b649e;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #deebf8;
+  border-radius: 8px;
+  background: #eef5fe;
+  color: #316da9;
   font-size: 12px;
+  font-weight: 800;
+}
+
+.current .lessonSymbol {
+  border-color: #c2d9f5;
+  background: #d8e9ff;
+  color: #185ba6;
 }
 
 .lessonText {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
   min-width: 0;
+  flex: 1;
 }
 
 .lessonText > span {
+  color: inherit;
   font-size: 12px;
   font-weight: 750;
-  line-height: 1.6;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 
 .lessonText small {
-  color: #8394a8;
+  color: #8a9bae;
   font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
 }
+
+/* ==========================================
+   LOADING / UNAUTHORIZED / ERROR
+   ========================================== */
 
 .centerState {
   display: flex;
@@ -357,89 +562,246 @@
   align-items: center;
   justify-content: center;
   gap: 23px;
-  min-height: 55vh;
-  padding: 45px 20px;
+  min-height: 65vh;
+  padding: 55px 24px;
   text-align: center;
 }
 
 .centerState h1 {
-  color: #102a52;
-  font-size: 24px;
+  max-width: 650px;
+  margin: 0;
+  color: var(--cm-navy);
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 800;
   line-height: 1.5;
 }
 
+.centerState p {
+  color: #72869f;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
 .centerState > a:not(.primary) {
-  color: #2a68a9;
+  color: #236ab6;
   font-size: 13px;
+  font-weight: 750;
   text-decoration: none;
 }
 
+.centerState > a:not(.primary):hover {
+  text-decoration: underline;
+}
+
+/* ==========================================
+   FOCUS & ACCESSIBILITY
+   ========================================== */
+
+.page a:focus-visible,
+.page button:focus-visible {
+  outline: 3px solid #74b2f7;
+  outline-offset: 3px;
+}
+
+.page[dir="rtl"] .eyebrow,
 :global(html[dir="rtl"]) .eyebrow {
   letter-spacing: 0;
 }
 
-@media (max-width: 1100px) {
+/* ==========================================
+   LARGE SCREENS
+   ========================================== */
+
+@media (min-width: 1500px) {
   .workspace {
-    grid-template-columns: minmax(0, 1fr) 310px;
+    grid-template-columns: minmax(0, 1fr) 380px;
   }
 
   .mainColumn {
-    padding-inline: 27px;
+    padding-inline: 75px;
   }
 }
 
-@media (max-width: 800px) {
+/* ==========================================
+   TABLET & SMALL DESKTOP
+   ========================================== */
+
+@media (max-width: 1150px) {
   .workspace {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) 320px;
   }
 
   .mainColumn {
-    padding: 28px 20px 43px;
+    padding: 35px 30px 75px;
   }
 
-  .sidebar {
-    border-inline-start: 0;
-    border-top: 1px solid #e1e9f4;
-  }
-
-  .topbar {
-    padding: 19px 20px;
-  }
-
-  .courseName {
-    max-width: 50%;
+  .sideHeader,
+  .progressBox {
+    padding-inline: 21px;
   }
 }
 
-@media (max-width: 480px) {
-  .lessonActions {
-    align-items: stretch;
+/* ==========================================
+   MOBILE / TABLET
+   ========================================== */
+
+@media (max-width: 850px) {
+  .workspace {
+    display: flex;
     flex-direction: column;
   }
 
+  .mainColumn {
+    order: 1;
+    padding: 32px 24px 55px;
+  }
+
+  .sidebar {
+    order: 2;
+    border-inline-start: 0;
+    border-top: 1px solid var(--cm-border);
+  }
+
+  .topbar {
+    min-height: 66px;
+    padding: 15px 24px;
+  }
+
+  .courseName {
+    max-width: 48%;
+  }
+
+  .sideHeader {
+    padding: 26px 24px 21px;
+  }
+
+  .progressBox {
+    padding: 23px 24px;
+  }
+
+  .sections {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .section {
+    border-inline-end: 1px solid #edf1f6;
+  }
+}
+
+/* ==========================================
+   SMALL MOBILE
+   ========================================== */
+
+@media (max-width: 600px) {
+  .topbar {
+    gap: 12px;
+    padding: 14px 17px;
+  }
+
+  .back {
+    font-size: 12px;
+  }
+
+  .courseName {
+    max-width: 45%;
+    font-size: 11px;
+  }
+
+  .mainColumn {
+    padding: 26px 16px 43px;
+  }
+
+  .lessonHeading {
+    margin-bottom: 20px;
+  }
+
+  .lessonHeading h1 {
+    font-size: clamp(23px, 6vw, 30px);
+  }
+
+  .player {
+    border-radius: 9px;
+  }
+
+  .playerPlaceholder {
+    min-height: 220px;
+    padding: 25px;
+    font-size: 13px;
+  }
+
+  .audioArea {
+    min-height: 270px;
+    gap: 24px;
+    padding: 40px 20px;
+  }
+
+  .audioMark {
+    width: 72px;
+    height: 72px;
+    font-size: 36px;
+  }
+
+  .textLesson {
+    min-height: 220px;
+    padding: 23px;
+    font-size: 14px;
+  }
+
+  .description {
+    margin-top: 29px;
+  }
+
+  .description h2 {
+    font-size: 20px;
+  }
+
+  .lessonActions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 13px;
+  }
+
   .navigation {
+    display: flex;
     width: 100%;
   }
 
   .navigation button {
     flex: 1;
+    padding-inline: 9px;
+    font-size: 12px;
   }
 
-  .primary {
+  .lessonActions > .primary {
     width: 100%;
   }
 
-  .playerPlaceholder {
-    min-height: 230px;
+  .sections {
+    grid-template-columns: 1fr;
   }
 
-  .textLesson {
-    padding: 23px;
+  .section {
+    padding-inline: 16px;
+    border-inline-end: 0;
   }
 }
 
+/* ==========================================
+   REDUCED MOTION
+   ========================================== */
+
 @media (prefers-reduced-motion: reduce) {
+  .back,
+  .navigation button,
+  .primary,
+  .lessonItem,
   .progressFill {
     transition: none;
+  }
+
+  .navigation button:hover,
+  .primary:hover {
+    transform: none;
   }
 }

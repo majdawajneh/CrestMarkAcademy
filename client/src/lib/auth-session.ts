@@ -165,3 +165,47 @@ export async function getCurrentSession(): Promise<SessionResult> {
 
   return fetchCurrentUser();
 }
+
+/**
+ * Fetch protected GET endpoints.
+ *
+ * If the access token has expired, try to restore
+ * the session and retry the request once.
+ *
+ * Returns the original 401 response if recovery fails.
+ */
+export async function authenticatedFetch(
+  input: string,
+  init: RequestInit = {}
+): Promise<Response> {
+  const method = (init.method ?? "GET").toUpperCase();
+
+  if (method !== "GET") {
+    throw new Error(
+      "authenticatedFetch supports GET requests only."
+    );
+  }
+
+  const options: RequestInit = {
+    ...init,
+    method: "GET",
+    credentials: "same-origin",
+    cache: "no-store",
+  };
+
+  const response = await fetch(input, options);
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+  // Refresh the session through the existing mechanism.
+  const session = await getCurrentSession();
+
+  if (session.status !== "authenticated") {
+    return response;
+  }
+
+  // Retry only once after successful recovery.
+  return fetch(input, options);
+}

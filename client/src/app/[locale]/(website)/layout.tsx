@@ -1,21 +1,15 @@
 
-import { Suspense, type ReactNode } from "react";
+import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 type Props = {
-  children: ReactNode;
-  params: Promise<{ locale: string }>;
+  children: React.ReactNode;
 };
 
-export default async function WebsiteLayout({
+export default function WebsiteLayout({
   children,
-  params,
 }: Props) {
-  const { locale } = await params;
-
-  const currentLocale = locale === "ar" ? "ar" : "en";
-
   return (
     <>
       <Suspense fallback={null}>
@@ -24,7 +18,9 @@ export default async function WebsiteLayout({
 
       {children}
 
-      <Footer locale={currentLocale} />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </>
   );
 }

@@ -471,30 +471,82 @@ builder.Services.AddSwaggerGen(
 
 
 
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode =
         StatusCodes.Status429TooManyRequests;
 
-    options.AddPolicy("certificate-verification", context =>
+    // One limiter per client IP, for each policy.
+    void AddIpPolicy(
+        string policyName,
+        int permitLimit,
+        TimeSpan window)
     {
-        var clientIp =
-            context.Connection.RemoteIpAddress?
-                .MapToIPv4()
-                .ToString() ?? "unknown";
+        options.AddPolicy(policyName, context =>
+        {
+            var clientIp =
+                context.Connection.RemoteIpAddress?
+                    .ToString() ?? "unknown";
 
-        return RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: clientIp,
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 20,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0,
-                AutoReplenishment = true
-            }
-        );
-    });
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: clientIp,
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = permitLimit,
+                    Window = window,
+                    QueueLimit = 0,
+                    AutoReplenishment = true
+                }
+            );
+        });
+    }
+
+    // Existing certificate verification protection.
+    AddIpPolicy(
+        "certificate-verification",
+        20,
+        TimeSpan.FromMinutes(1)
+    );
+
+    // Authentication protection.
+    AddIpPolicy(
+        "auth-login",
+        5,
+        TimeSpan.FromMinutes(1)
+    );
+
+    AddIpPolicy(
+        "auth-register",
+        5,
+        TimeSpan.FromMinutes(10)
+    );
+
+    AddIpPolicy(
+        "auth-email",
+        3,
+        TimeSpan.FromMinutes(10)
+    );
+
+    AddIpPolicy(
+        "auth-token",
+        5,
+        TimeSpan.FromMinutes(10)
+    );
+
+    AddIpPolicy(
+        "auth-confirm",
+        10,
+        TimeSpan.FromMinutes(10)
+    );
+
+    AddIpPolicy(
+        "auth-refresh",
+        30,
+        TimeSpan.FromMinutes(1)
+    );
 });
+
 
 
 var app =

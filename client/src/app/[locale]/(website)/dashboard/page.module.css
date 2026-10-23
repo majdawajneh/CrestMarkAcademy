@@ -1,0 +1,956 @@
+
+/* ==========================================
+   CRESTMARK — STUDENT DASHBOARD
+   ========================================== */
+
+.page {
+  min-height: calc(100vh - 76px);
+  background: #ffffff;
+  color: #142e50;
+}
+
+.container {
+  width: min(1280px, calc(100% - 64px));
+  margin-inline: auto;
+  padding: 36px 0 110px;
+}
+
+/* Breadcrumb */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #8495a9;
+  font-size: 12px;
+}
+
+.breadcrumb a {
+  color: #5b7591;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: #2563eb;
+}
+
+/* Hero */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  align-items: center;
+  gap: 55px;
+  padding: 70px 0 85px;
+}
+
+.heroCopy {
+  min-width: 0;
+}
+
+.eyebrow,
+.sectionEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  color: #2b70bd;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.eyebrowLine {
+  width: 26px;
+  height: 2px;
+  background: #2563eb;
+}
+
+.hero h1 {
+  margin: 21px 0 24px;
+  color: #102a52;
+  font-size: clamp(41px, 5vw, 70px);
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.052em;
+}
+
+.hero h1 span {
+  color: #2885ce;
+}
+
+.heroCopy > p {
+  max-width: 565px;
+  margin: 0;
+  color: #667f9a;
+  font-size: 16px;
+  line-height: 1.95;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 13px;
+  margin-top: 33px;
+}
+
+.primaryLink,
+.secondaryLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  min-height: 48px;
+  padding: 12px 21px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.primaryLink {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.primaryLink:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+}
+
+.secondaryLink {
+  border: 1px solid #cfdef0;
+  background: #ffffff;
+  color: #225a93;
+}
+
+.secondaryLink:hover {
+  background: #f0f7ff;
+  border-color: #9fc4ed;
+}
+
+.primaryLink svg,
+.viewAll svg,
+.continueButton svg,
+.shortcutArrow svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Brand visual */
+
+.heroVisual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 270px;
+  padding: 28px;
+  border: 1px solid #dbe7f3;
+  border-radius: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(120, 184, 255, 0.28), transparent 34%),
+    linear-gradient(135deg, #0f2b50 0%, #163b6b 55%, #1f5d9d 100%);
+  box-shadow: 0 24px 50px rgba(16, 42, 82, 0.14);
+}
+.heroVisual::before {
+  content: "";
+  position: absolute;
+  inset: auto auto 24px 24px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  filter: blur(10px);
+}
+.heroLogoCard {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 280px);
+  aspect-ratio: 1 / 1;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 40px rgba(5, 20, 42, 0.22);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.visualFrame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 190px;
+  height: 190px;
+  border: 1px solid #d6e5f5;
+  border-radius: 23px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(16, 42, 82, 0.07);
+}
+
+.heroLogo {
+  display: block;
+  width: 72%;
+  max-width: 190px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 22px rgba(7, 25, 49, 0.22));
+}
+
+.heroVisualLabel {
+  position: relative;
+  z-index: 1;
+  margin-top: 18px;
+  color: #d9ecff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .heroVisual {
+    min-height: 220px;
+    padding: 22px;
+  }
+
+  .heroLogoCard {
+    width: min(100%, 220px);
+    border-radius: 22px;
+  }
+
+  .heroLogo {
+    width: 70%;
+    max-width: 150px;
+  }
+
+  .heroVisualLabel {
+    margin-top: 14px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+}
+.visualCaption {
+  margin-top: 24px;
+  color: #5982ae;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+/* Sections */
+
+.overview,
+.continueSection,
+.shortcutsSection {
+  margin-top: 40px;
+}
+
+.continueSection,
+.shortcutsSection {
+  margin-top: 88px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin-bottom: 29px;
+}
+
+.sectionHeading h2 {
+  margin: 13px 0 10px;
+  color: #102a52;
+  font-size: clamp(27px, 3vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.3;
+}
+
+.sectionHeading p {
+  margin: 0;
+  color: #72869e;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* Stats */
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.statCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 164px;
+  overflow: hidden;
+  padding: 25px 25px 22px;
+  border: 1px solid #e0eaf5;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.statCard > span {
+  color: #6a839e;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.statCard strong {
+  color: #102a52;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.statLine {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  width: 55px;
+  height: 3px;
+  background: #3b91de;
+}
+
+/* Average progress */
+
+.averagePanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 23px;
+  padding: 25px 28px 17px;
+  border: 1px solid #e0eaf5;
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  background: #ffffff;
+}
+
+.averageLabel {
+  color: #193f67;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.averagePanel p {
+  margin: 8px 0 0;
+  color: #8293a6;
+  font-size: 12px;
+}
+
+.averageValue strong {
+  color: #186db9;
+  font-size: 28px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.averageTrack {
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid #e0eaf5;
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  background: #e9f1fa;
+}
+
+.averageFill {
+  height: 100%;
+  background: #2679ce;
+  transition: width 0.4s ease;
+}
+
+.unavailableNote {
+  margin-top: 12px;
+  color: #8396aa;
+  font-size: 12px;
+}
+
+/* Continue Learning */
+
+.viewAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 4px;
+  color: #245e9d;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.viewAll:hover {
+  color: #2563eb;
+}
+
+.courseList {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.courseCard {
+  display: grid;
+  grid-template-columns: 205px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 27px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #e1eaf4;
+  border-radius: 12px;
+  background: #ffffff;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.courseCard:hover {
+  border-color: #c0d5ed;
+  box-shadow: 0 12px 35px rgba(16, 42, 82, 0.055);
+  transform: translateY(-2px);
+}
+
+.courseThumbLink {
+  display: block;
+  overflow: hidden;
+  border-radius: 9px;
+}
+
+.courseImageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #eaf2fb;
+}
+
+.courseImage {
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.courseCard:hover .courseImage {
+  transform: scale(1.04);
+}
+
+.courseImageFallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  background: #eaf2fb;
+  color: #6086ae;
+}
+
+.courseImageFallback svg {
+  width: 49px;
+  height: 49px;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.courseImageFallback span {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.courseDetails {
+  min-width: 0;
+}
+
+.courseTopline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 13px;
+  margin-bottom: 11px;
+}
+
+.courseStatus {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: #eaf6ef;
+  color: #237a4e;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.doneStatus {
+  background: #e9f1ff;
+  color: #2860b0;
+}
+
+.courseDate {
+  color: #8598ac;
+  font-size: 11px;
+}
+
+.courseDetails h3 {
+  margin: 0;
+  color: #133251;
+  font-size: clamp(17px, 2vw, 21px);
+  font-weight: 800;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.courseDetails h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.courseDetails h3 a:hover {
+  color: #2563eb;
+}
+
+.courseProgress {
+  max-width: 490px;
+  margin-top: 19px;
+}
+
+.progressLabels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+  color: #6b829c;
+  font-size: 12px;
+}
+
+.progressLabels strong {
+  color: #2069b0;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 100px;
+  background: #e8f0fa;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: #287ad2;
+  transition: width 0.35s ease;
+}
+
+.courseProgress small {
+  display: block;
+  margin-top: 9px;
+  color: #8a9bae;
+  font-size: 11px;
+}
+
+.courseUnavailable {
+  margin: 17px 0 0;
+  color: #8999aa;
+  font-size: 12px;
+}
+
+.continueButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 45px;
+  padding: 11px 16px;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.continueButton:hover {
+  background: #1d4ed8;
+}
+
+/* Quick Access */
+
+.shortcutGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.shortcut {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 217px;
+  padding: 27px 24px;
+  border: 1px solid #e0eaf5;
+  border-radius: 12px;
+  background: #f9fbfe;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.shortcut:hover {
+  background: #eff7ff;
+  border-color: #bdd8f5;
+  transform: translateY(-3px);
+}
+
+.shortcutIcon {
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  border-radius: 10px;
+  background: #e6f1fd;
+  color: #2775bc;
+}
+
+.shortcutIcon svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shortcut h3 {
+  margin: 23px 0 9px;
+  color: #173b61;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.shortcut p {
+  margin: 0;
+  color: #7489a0;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.shortcutArrow {
+  position: absolute;
+  inset-inline-end: 22px;
+  top: 29px;
+  display: inline-flex;
+  color: #5188bd;
+}
+
+/* States */
+
+.statePanel,
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 350px;
+  padding: 55px 25px;
+  border: 1px solid #dfeaf6;
+  border-radius: 13px;
+  background: #f8fbff;
+  text-align: center;
+}
+
+.statePanel h2,
+.emptyState h3 {
+  margin: 19px 0 12px;
+  color: #102a52;
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.statePanel p,
+.emptyState p {
+  max-width: 460px;
+  margin: 0;
+  color: #7589a1;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.statePanel .primaryLink,
+.emptyState .primaryLink {
+  margin-top: 24px;
+}
+
+.stateIcon,
+.emptyIcon {
+  display: grid;
+  place-items: center;
+  width: 78px;
+  height: 78px;
+  border-radius: 17px;
+  background: #e6f1fe;
+  color: #2d72b9;
+}
+
+.stateIcon svg,
+.emptyIcon svg {
+  width: 43px;
+  height: 43px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.spinner {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 20px;
+  border: 3px solid #dce9f8;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Accessibility / RTL */
+
+.page a:focus-visible,
+.page button:focus-visible {
+  outline: 3px solid #6caff8;
+  outline-offset: 3px;
+}
+
+.page[dir="rtl"] .eyebrow,
+.page[dir="rtl"] .sectionEyebrow,
+.page[dir="rtl"] .visualCaption,
+.page[dir="rtl"] .courseImageFallback span {
+  letter-spacing: 0;
+}
+
+.page[dir="rtl"] .primaryLink svg,
+.page[dir="rtl"] .viewAll svg,
+.page[dir="rtl"] .continueButton svg,
+.page[dir="rtl"] .shortcutArrow svg {
+  transform: scaleX(-1);
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .shortcutGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .courseCard {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+
+  .continueButton {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 800px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 55px 0 65px;
+  }
+
+  .heroVisual {
+    min-height: 235px;
+  }
+
+  .visualFrame {
+    width: 140px;
+    height: 140px;
+  }
+
+  .heroLogo {
+    width: 95px;
+    height: 95px;
+  }
+}
+
+@media (max-width: 650px) {
+  .container {
+    width: calc(100% - 36px);
+    padding: 25px 0 75px;
+  }
+
+  .hero {
+    padding: 45px 0 55px;
+  }
+
+  .hero h1 {
+    font-size: clamp(39px, 9vw, 52px);
+  }
+
+  .heroCopy > p {
+    font-size: 14px;
+  }
+
+  .heroVisual {
+    min-height: 190px;
+  }
+
+  .visualFrame {
+    width: 115px;
+    height: 115px;
+  }
+
+  .heroLogo {
+    width: 80px;
+    height: 80px;
+  }
+
+  .statsGrid {
+    gap: 12px;
+  }
+
+  .statCard {
+    min-height: 130px;
+    padding: 20px;
+  }
+
+  .statCard strong {
+    font-size: 35px;
+  }
+
+  .statCard > span {
+    font-size: 12px;
+  }
+
+  .continueSection,
+  .shortcutsSection {
+    margin-top: 65px;
+  }
+
+  .courseCard {
+    grid-template-columns: 1fr;
+    gap: 17px;
+    padding: 16px;
+  }
+
+  .courseImageWrap {
+    aspect-ratio: 16 / 9;
+  }
+
+  .continueButton {
+    grid-column: 1;
+    justify-self: stretch;
+  }
+
+  .shortcutGrid {
+    gap: 12px;
+  }
+
+  .shortcut {
+    min-height: 205px;
+    padding: 22px 17px;
+  }
+
+  .shortcut h3 {
+    font-size: 15px;
+  }
+
+  .shortcut p {
+    font-size: 11px;
+  }
+
+  .shortcutArrow {
+    inset-inline-end: 14px;
+    top: 24px;
+  }
+}
+
+@media (max-width: 390px) {
+  .shortcutGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .shortcut {
+    min-height: 160px;
+  }
+
+  .heroActions {
+    flex-direction: column;
+  }
+
+  .heroActions a {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+
+  .primaryLink,
+  .secondaryLink,
+  .shortcut,
+  .courseCard,
+  .courseImage,
+  .averageFill,
+  .progressFill {
+    transition: none;
+  }
+
+  .shortcut:hover,
+  .courseCard:hover,
+  .primaryLink:hover,
+  .courseCard:hover .courseImage {
+    transform: none;
+  }
+}

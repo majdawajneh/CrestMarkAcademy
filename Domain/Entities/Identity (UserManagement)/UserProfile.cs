@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿
+using System;
 
 namespace Domain.Entities.Identity
 {
@@ -10,6 +9,7 @@ namespace Domain.Entities.Identity
 
         public int UserId { get; set; }
 
+        // General profile
         public string? ProfileImageUrl { get; set; }
 
         public string? Bio { get; set; }
@@ -20,6 +20,23 @@ namespace Domain.Entities.Identity
 
         public DateTime? DateOfBirth { get; set; }
 
+        // Instructor professional profile
+        public string? ProfessionalTitle { get; set; }
+
+        public string? Expertise { get; set; }
+
+        public string? Experience { get; set; }
+
+        // Instructor social links
+        public string? LinkedInUrl { get; set; }
+
+        public string? GitHubUrl { get; set; }
+
+        public string? WebsiteUrl { get; set; }
+
+        public string? YouTubeUrl { get; set; }
+
+        // Navigation
         public User User { get; set; } = null!;
     }
 }

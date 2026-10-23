@@ -1,0 +1,271 @@
+
+.form {
+  margin-top: 30px;
+  padding: 28px;
+  border: 1px solid #dce8f7;
+  border-radius: 13px;
+  background: #f8fbff;
+}
+
+.formHeading h3 {
+  color: #102a52;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.formHeading p {
+  margin-top: 7px;
+  color: #718299;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.ratingField {
+  margin: 23px 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.ratingField legend {
+  margin-bottom: 11px;
+  color: #254466;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ratingOptions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  direction: ltr;
+  width: fit-content;
+}
+
+.starButton,
+.starSelected {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 37px;
+  height: 37px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: Arial, sans-serif;
+  font-size: 31px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.starButton {
+  color: #d5dfec;
+}
+
+.starSelected {
+  color: #e8a329;
+}
+
+.starButton:hover,
+.starSelected:hover {
+  transform: scale(1.12);
+}
+
+.starButton:focus-visible,
+.starSelected:focus-visible,
+.submitButton:focus-visible,
+.secondaryButton:focus-visible,
+.dangerButton:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+.commentField {
+  display: flex;
+  flex-direction: column;
+  margin-top: 24px;
+}
+
+.commentField label {
+  margin-bottom: 11px;
+  color: #254466;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.commentField label span {
+  color: #8292a7;
+  font-weight: 400;
+}
+
+.commentField textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 15px 17px;
+  border: 1px solid #d7e2f0;
+  border-radius: 9px;
+  outline: none;
+  background: #ffffff;
+  color: #102a52;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.8;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.commentField textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px #2563eb14;
+}
+
+.commentField textarea::placeholder {
+  color: #9aa9ba;
+}
+
+.counter {
+  align-self: flex-end;
+  margin-top: 7px;
+  color: #8596ab;
+  font-size: 11px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.submitButton,
+.secondaryButton,
+.dangerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 43px;
+  padding: 0 20px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.submitButton {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.secondaryButton {
+  border: 1px solid #d7e2f0;
+  background: #ffffff;
+  color: #24476c;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: #edf4ff;
+}
+
+.dangerButton {
+  border: 1px solid #f2cece;
+  background: #fff8f8;
+  color: #bb3030;
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: #ffeded;
+}
+
+.submitButton:disabled,
+.secondaryButton:disabled,
+.dangerButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.notice,
+.existing {
+  margin-top: 28px;
+  padding: 20px 23px;
+  border: 1px solid #e1eaf4;
+  border-radius: 10px;
+  background: #f8fbff;
+  color: #61748c;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.existing p {
+  color: #254466;
+}
+
+.existing .actions {
+  margin-top: 14px;
+}
+
+.loginLink,
+.textButton {
+  display: inline-flex;
+  margin-inline-start: 12px;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.error {
+  margin-top: 13px;
+  color: #c33333;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+  .form {
+    padding: 22px 18px;
+  }
+
+  .formHeading h3 {
+    font-size: 18px;
+  }
+
+  .notice,
+  .existing {
+    padding: 18px;
+  }
+
+  .starButton,
+  .starSelected {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starButton,
+  .starSelected,
+  .submitButton,
+  .secondaryButton,
+  .dangerButton {
+    transition: none;
+  }
+
+  .starButton:hover,
+  .starSelected:hover {
+    transform: none;
+  }
+}

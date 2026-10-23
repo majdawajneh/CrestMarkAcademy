@@ -1149,3 +1149,42 @@
     transition: none;
   }
 }
+
+/* Admin user personal profile — supplementary to existing panel */
+.personalDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+}
+.personalDetailsGrid > div {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid #e0e9f2;
+  border-radius: 8px;
+  background: #f9fcff;
+}
+.personalDetailsGrid dt {
+  margin-bottom: 8px;
+  color: #8298ab;
+  font-size: 11px;
+}
+.personalDetailsGrid dd {
+  margin: 0;
+  color: #245474;
+  font-size: 13px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+.personalDetailsGrid .personalDetailsFull {
+  grid-column: 1 / -1;
+}
+.personalDetailsGrid .biography {
+  font-weight: 500;
+  line-height: 1.85;
+  white-space: pre-wrap;
+}
+@media (max-width: 400px) {
+  .personalDetailsGrid { grid-template-columns: 1fr; }
+  .personalDetailsGrid .personalDetailsFull { grid-column: auto; }
+}

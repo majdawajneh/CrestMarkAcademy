@@ -1,7 +1,9 @@
-﻿using Application.Dto_s.Auth;
+﻿
+using Application.Dto_s.Auth;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace CrestMarkAcademy.Controllers
@@ -17,17 +19,31 @@ namespace CrestMarkAcademy.Controllers
             _authService = authService;
         }
 
+        // ========================================
+        // Current User
+        // ========================================
+
         [Authorize]
         [HttpGet("me")]
         public IActionResult Me()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var username = User.FindFirstValue(ClaimTypes.Name);
-            var email = User.FindFirstValue(ClaimTypes.Email);
+            var userId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
 
-            var roles = User.FindAll(ClaimTypes.Role)
-                .Select(r => r.Value)
-                .ToList();
+            var username = User.FindFirstValue(
+                ClaimTypes.Name
+            );
+
+            var email = User.FindFirstValue(
+                ClaimTypes.Email
+            );
+
+            var roles = User.FindAll(
+                ClaimTypes.Role
+            )
+            .Select(r => r.Value)
+            .ToList();
 
             return Ok(new
             {
@@ -37,6 +53,10 @@ namespace CrestMarkAcademy.Controllers
                 Roles = roles
             });
         }
+
+        // ========================================
+        // Admin Test
+        // ========================================
 
         [Authorize(Roles = "Admin")]
         [HttpGet("admin-test")]
@@ -48,70 +68,92 @@ namespace CrestMarkAcademy.Controllers
             });
         }
 
+        // ========================================
+        // Register
+        // ========================================
+
         [AllowAnonymous]
+        [EnableRateLimiting("auth-register")]
         [HttpPost("register")]
-        public async Task<ActionResult<RegisterResponseDto>> Register(RegisterDto dto)
+        public async Task<ActionResult<RegisterResponseDto>>
+            Register(RegisterDto dto)
         {
             var result = await _authService.RegisterAsync(dto);
 
             return Ok(result);
         }
 
+        // ========================================
+        // Login
+        // ========================================
+
         [AllowAnonymous]
+        [EnableRateLimiting("auth-login")]
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto)
+        public async Task<ActionResult<AuthResponseDto>>
+            Login(LoginDto dto)
         {
             var result = await _authService.LoginAsync(dto);
 
             return Ok(result);
         }
 
+        // ========================================
+        // Refresh Token
+        // ========================================
+
         [AllowAnonymous]
+        [EnableRateLimiting("auth-refresh")]
         [HttpPost("refresh-token")]
-        public async Task<ActionResult<AuthResponseDto>> RefreshToken(RefreshTokenDto dto)
+        public async Task<ActionResult<AuthResponseDto>>
+            RefreshToken(RefreshTokenDto dto)
         {
             var result = await _authService.RefreshTokenAsync(dto);
 
             return Ok(result);
         }
 
+        // ========================================
+        // Logout
+        // ========================================
+
         [AllowAnonymous]
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout(LogoutDto dto)
+        public async Task<IActionResult> Logout(
+            LogoutDto dto)
         {
             await _authService.LogoutAsync(dto);
 
             return NoContent();
         }
 
-        // =========================
+        // ========================================
         // Confirm Email
-        // =========================
+        // ========================================
 
         [AllowAnonymous]
+        [EnableRateLimiting("auth-confirm")]
         [HttpPost("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(
             ConfirmEmailDto dto)
         {
-            await _authService
-                .ConfirmEmailAsync(dto);
+            await _authService.ConfirmEmailAsync(dto);
 
             return Ok(new
             {
-                Message =
-                    "Email confirmed successfully."
+                Message = "Email confirmed successfully."
             });
         }
 
-        // =========================
+        // ========================================
         // Resend Confirmation Email
-        // =========================
+        // ========================================
 
         [AllowAnonymous]
+        [EnableRateLimiting("auth-email")]
         [HttpPost("resend-confirmation")]
-        public async Task<IActionResult>
-            ResendConfirmation(
-                ResendConfirmationDto dto)
+        public async Task<IActionResult> ResendConfirmation(
+            ResendConfirmationDto dto)
         {
             await _authService
                 .ResendConfirmationEmailAsync(dto);
@@ -123,12 +165,17 @@ namespace CrestMarkAcademy.Controllers
             });
         }
 
+        // ========================================
+        // Forgot Password
+        // ========================================
+
         [AllowAnonymous]
+        [EnableRateLimiting("auth-email")]
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+        public async Task<IActionResult> ForgotPassword(
+            ForgotPasswordDto dto)
         {
-            await _authService
-                .ForgotPasswordAsync(dto);
+            await _authService.ForgotPasswordAsync(dto);
 
             return Ok(new
             {
@@ -137,17 +184,17 @@ namespace CrestMarkAcademy.Controllers
             });
         }
 
-        // =========================
+        // ========================================
         // Reset Password
-        // =========================
+        // ========================================
 
         [AllowAnonymous]
+        [EnableRateLimiting("auth-token")]
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(
             ResetPasswordDto dto)
         {
-            await _authService
-                .ResetPasswordAsync(dto);
+            await _authService.ResetPasswordAsync(dto);
 
             return Ok(new
             {
@@ -156,9 +203,9 @@ namespace CrestMarkAcademy.Controllers
             });
         }
 
-        // =========================
+        // ========================================
         // Change Password
-        // =========================
+        // ========================================
 
         [Authorize]
         [HttpPost("change-password")]
@@ -170,25 +217,40 @@ namespace CrestMarkAcademy.Controllers
                     ClaimTypes.NameIdentifier
                 );
 
-
-            if (!int.TryParse(
-                userIdValue,
-                out var userId))
+            if (!int.TryParse(userIdValue, out var userId))
             {
                 return Unauthorized();
             }
-
 
             await _authService.ChangePasswordAsync(
                 userId,
                 dto
             );
 
+            return Ok(new
+            {
+                Message = "Password changed successfully."
+            });
+        }
+
+        // ========================================
+        // Accept Instructor Invitation
+        // ========================================
+
+        [AllowAnonymous]
+        [EnableRateLimiting("auth-token")]
+        [HttpPost("instructor-invitation/accept")]
+        public async Task<IActionResult>
+            AcceptInstructorInvitation(
+                [FromBody] AcceptInstructorInvitationDto dto)
+        {
+            await _authService
+                .AcceptInstructorInvitationAsync(dto);
 
             return Ok(new
             {
-                Message =
-                    "Password changed successfully. Please log in again."
+                message =
+                    "Instructor account activated successfully."
             });
         }
     }

@@ -30,28 +30,25 @@ namespace CrestMarkAcademy.Controllers
         // Start Checkout
         // =========================
 
-
         [HttpPost("orders/{orderId:int}/checkout")]
         [Authorize]
         public async Task<IActionResult> Checkout(
             int orderId,
             CancellationToken ct)
         {
-            // Disable payment checkout at the API level.
             if (!_config.GetValue<bool>("PayTabs:Enabled"))
             {
                 return StatusCode(
                     StatusCodes.Status503ServiceUnavailable,
                     new
                     {
-                        message = "Online payments are temporarily unavailable."
-                    }
-                );
+                        message =
+                            "Online payments are temporarily unavailable."
+                    });
             }
 
             var userIdValue = User.FindFirstValue(
-                ClaimTypes.NameIdentifier
-            );
+                ClaimTypes.NameIdentifier);
 
             if (!int.TryParse(userIdValue, out var userId))
             {
@@ -61,15 +58,13 @@ namespace CrestMarkAcademy.Controllers
             var url = await _gateway.StartAsync(
                 userId,
                 orderId,
-                ct
-            );
+                ct);
 
             return Ok(new
             {
                 redirectUrl = url
             });
         }
-
 
         // =========================
         // PayTabs Callback
@@ -83,41 +78,31 @@ namespace CrestMarkAcademy.Controllers
         {
             try
             {
-                // =========================
                 // 1. Get Server Key
-                // =========================
 
                 var serverKey = _config[
-                    "PayTabs:ServerKey"
-                ];
+                    "PayTabs:ServerKey"];
 
                 if (string.IsNullOrWhiteSpace(serverKey))
                 {
                     _logger.LogError(
-                        "PayTabs ServerKey is not configured."
-                    );
+                        "PayTabs ServerKey is not configured.");
 
                     return StatusCode(503);
                 }
 
-                // =========================
                 // 2. Read Signature
-                // =========================
 
                 var signature = Request.Headers[
-                    "Signature"
-                ].ToString().Trim();
+                    "Signature"].ToString().Trim();
 
                 if (string.IsNullOrWhiteSpace(signature))
                 {
                     return StatusCode(
-                        StatusCodes.Status403Forbidden
-                    );
+                        StatusCodes.Status403Forbidden);
                 }
 
-                // =========================
                 // 3. Read Raw Body
-                // =========================
 
                 const int maxBodySize = 32768;
 
@@ -135,8 +120,7 @@ namespace CrestMarkAcademy.Controllers
                 while ((bytesRead =
                     await Request.Body.ReadAsync(
                         chunk.AsMemory(),
-                        ct
-                    )) > 0)
+                        ct)) > 0)
                 {
                     if (buffer.Length + bytesRead > maxBodySize)
                     {
@@ -146,15 +130,12 @@ namespace CrestMarkAcademy.Controllers
                     buffer.Write(
                         chunk,
                         0,
-                        bytesRead
-                    );
+                        bytesRead);
                 }
 
                 var bodyBytes = buffer.ToArray();
 
-                // =========================
                 // 4. Verify HMAC Signature
-                // =========================
 
                 if (!VerifySignature(
                     bodyBytes,
@@ -162,17 +143,13 @@ namespace CrestMarkAcademy.Controllers
                     serverKey))
                 {
                     _logger.LogWarning(
-                        "Rejected PayTabs callback: invalid signature."
-                    );
+                        "Rejected PayTabs callback: invalid signature.");
 
                     return StatusCode(
-                        StatusCodes.Status403Forbidden
-                    );
+                        StatusCodes.Status403Forbidden);
                 }
 
-                // =========================
                 // 5. Parse Verified JSON
-                // =========================
 
                 using var payload =
                     JsonDocument.Parse(bodyBytes);
@@ -186,8 +163,7 @@ namespace CrestMarkAcademy.Controllers
                 if (!payload.RootElement.TryGetProperty(
                     "tran_ref",
                     out var reference) ||
-                    reference.ValueKind !=
-                        JsonValueKind.String)
+                    reference.ValueKind != JsonValueKind.String)
                 {
                     return BadRequest();
                 }
@@ -201,19 +177,11 @@ namespace CrestMarkAcademy.Controllers
                     return BadRequest();
                 }
 
-
-                // =========================
                 // 6. Verify With PayTabs API
-                // =========================
-
-                // True means the gateway result
-                // was verified and processed.
-                // It may be Paid or Failed.
 
                 var processed = await _gateway.ConfirmAsync(
                     transactionReference,
-                    ct
-                );
+                    ct);
 
                 if (!processed)
                 {
@@ -224,15 +192,12 @@ namespace CrestMarkAcademy.Controllers
                     });
                 }
 
-                // =========================
                 // 7. Callback Processed
-                // =========================
 
                 return Ok(new
                 {
                     received = true
                 });
-
             }
             catch (JsonException)
             {
@@ -247,8 +212,7 @@ namespace CrestMarkAcademy.Controllers
             {
                 _logger.LogError(
                     ex,
-                    "PayTabs callback processing failed."
-                );
+                    "PayTabs callback processing failed.");
 
                 return StatusCode(
                     503,
@@ -256,8 +220,56 @@ namespace CrestMarkAcademy.Controllers
                     {
                         message =
                             "Payment confirmation temporarily unavailable."
-                    }
-                );
+                    });
+            }
+        }
+
+        // =========================
+        // Admin Payment Reconciliation
+        // =========================
+
+        [HttpPost("admin/payments/{paymentId:int}/reconcile")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Reconcile(
+            int paymentId,
+            CancellationToken ct)
+        {
+            if (paymentId <= 0)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                var result = await _gateway.ReconcileAsync(
+                    paymentId,
+                    ct);
+
+                return Ok(new
+                {
+                    paymentId,
+                    result
+                });
+            }
+            catch (OperationCanceledException)
+                when (ct.IsCancellationRequested)
+            {
+                return StatusCode(503);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "PayTabs reconciliation failed for payment {PaymentId}",
+                    paymentId);
+
+                return StatusCode(
+                    503,
+                    new
+                    {
+                        message =
+                            "Payment reconciliation unavailable."
+                    });
             }
         }
 
@@ -270,9 +282,6 @@ namespace CrestMarkAcademy.Controllers
             string signature,
             string serverKey)
         {
-            // SHA-256 signature in hexadecimal:
-            // 32 bytes = 64 hex characters.
-
             if (signature.Length != 64)
             {
                 return false;
@@ -290,21 +299,18 @@ namespace CrestMarkAcademy.Controllers
                 return false;
             }
 
-            var keyBytes = Encoding.UTF8.GetBytes(
-                serverKey
-            );
+            var keyBytes =
+                Encoding.UTF8.GetBytes(serverKey);
 
             using var hmac = new HMACSHA256(
-                keyBytes
-            );
+                keyBytes);
 
             var expectedSignature =
                 hmac.ComputeHash(body);
 
             return CryptographicOperations.FixedTimeEquals(
                 expectedSignature,
-                receivedSignature
-            );
+                receivedSignature);
         }
     }
 }

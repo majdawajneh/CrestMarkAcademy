@@ -1,4 +1,5 @@
-﻿namespace Application.Dto_s.Profile
+﻿
+namespace Application.Dto_s.Profile
 {
     public class ProfileDto
     {
@@ -23,6 +24,21 @@
         public string? Country { get; set; }
 
         public DateTime? DateOfBirth { get; set; }
+
+        // Instructor professional information
+        public string? ProfessionalTitle { get; set; }
+
+        public string? Expertise { get; set; }
+
+        public string? Experience { get; set; }
+
+        public string? LinkedInUrl { get; set; }
+
+        public string? GitHubUrl { get; set; }
+
+        public string? WebsiteUrl { get; set; }
+
+        public string? YouTubeUrl { get; set; }
 
         public DateTime CreatedAt { get; set; }
     }

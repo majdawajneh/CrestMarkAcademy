@@ -13,11 +13,14 @@ namespace CrestMarkAcademy.Controllers
     public class PaymentsController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
+        private readonly IConfiguration _config;
 
         public PaymentsController(
-            IPaymentService paymentService)
+            IPaymentService paymentService,
+            IConfiguration configuration)
         {
             _paymentService = paymentService;
+            _config = configuration;
         }
 
         // =========================
@@ -27,10 +30,30 @@ namespace CrestMarkAcademy.Controllers
         [HttpPost("orders/{orderId:int}")]
         public async Task<ActionResult<PaymentDto>> Create(
             int orderId,
-            CreatePaymentDto dto)
+            [FromBody] CreatePaymentDto dto)
         {
-            var userId = GetCurrentUserId();
+            // Online checkout must be enabled explicitly.
+            if (!_config.GetValue<bool>("PayTabs:Enabled"))
+            {
+                return StatusCode(
+                    StatusCodes.Status503ServiceUnavailable,
+                    new
+                    {
+                        message =
+                            "Online payments are temporarily unavailable."
+                    }
+                );
+            }
 
+            if (dto == null)
+            {
+                return BadRequest(new
+                {
+                    message = "Payment details are required."
+                });
+            }
+
+            // Only PayTabs is supported.
             if (!string.Equals(
                 dto.PaymentProvider,
                 "PayTabs",
@@ -41,6 +64,15 @@ namespace CrestMarkAcademy.Controllers
                     message =
                         "Only PayTabs is supported for online checkout."
                 });
+            }
+
+            var userIdValue = User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
+
+            if (!int.TryParse(userIdValue, out var userId))
+            {
+                return Unauthorized();
             }
 
             dto.PaymentProvider = "PayTabs";
@@ -55,14 +87,21 @@ namespace CrestMarkAcademy.Controllers
         }
 
         // =========================
-        // Get Order Payments
+        // Get Payments By Order
         // =========================
 
         [HttpGet("orders/{orderId:int}")]
         public async Task<ActionResult<IEnumerable<PaymentDto>>> GetByOrder(
             int orderId)
         {
-            var userId = GetCurrentUserId();
+            var userIdValue = User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
+
+            if (!int.TryParse(userIdValue, out var userId))
+            {
+                return Unauthorized();
+            }
 
             var payments = await _paymentService.GetByOrderAsync(
                 userId,
@@ -70,26 +109,6 @@ namespace CrestMarkAcademy.Controllers
             );
 
             return Ok(payments);
-        }
-
-        // =========================
-        // Current User
-        // =========================
-
-        private int GetCurrentUserId()
-        {
-            var value = User.FindFirstValue(
-                ClaimTypes.NameIdentifier
-            );
-
-            if (!int.TryParse(value, out var userId))
-            {
-                throw new UnauthorizedAccessException(
-                    "Invalid user token."
-                );
-            }
-
-            return userId;
         }
     }
 }

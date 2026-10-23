@@ -464,8 +464,9 @@ useEffect(() => {
   }
 
   const controller = new AbortController();
+  const courseId = course.id;
 
-  async function checkExistingOrders() {
+async function checkExistingOrders() {
     setPendingCheck("checking");
     setCheckedCourseId(null);
 
@@ -525,7 +526,7 @@ useEffect(() => {
           entry.items.some(
             (item: unknown) =>
               isObject(item) &&
-              item.courseId === course.id
+              item.courseId === courseId
           )
         );
       });
@@ -556,7 +557,7 @@ useEffect(() => {
         setExistingPending(false);
       }
 
-      setCheckedCourseId(course.id);
+      setCheckedCourseId(courseId);
       setPendingCheck("ready");
     } catch {
       if (!controller.signal.aborted) {

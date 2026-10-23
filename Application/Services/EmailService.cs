@@ -62,7 +62,29 @@ namespace Application.Services
                 _settings.Port,
                 SecureSocketOptions.StartTls
             );
+            Console.WriteLine("===== SMTP DEBUG =====");
 
+            Console.WriteLine(
+                $"Host: {_settings.Host}"
+            );
+
+            Console.WriteLine(
+                $"Port: {_settings.Port}"
+            );
+
+            Console.WriteLine(
+                $"Username: {_settings.Username}"
+            );
+
+            Console.WriteLine(
+                $"Password configured: {!string.IsNullOrWhiteSpace(_settings.Password)}"
+            );
+
+            Console.WriteLine(
+                $"Password length: {_settings.Password?.Length ?? 0}"
+            );
+
+            Console.WriteLine("======================");
 
             await smtp.AuthenticateAsync(
                 _settings.Username,

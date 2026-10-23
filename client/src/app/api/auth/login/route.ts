@@ -113,12 +113,12 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    if (backend.status === 400 || backend.status === 401) {
-      return error(
-        "Invalid credentials or account unavailable.",
-        401
-      );
-    }
+    if (backend.status === 429) {
+        return error(
+          "Too many login attempts. Please try again later.",
+          429
+        );
+      }
 
     if (!backend.ok) {
       return error("Login service unavailable.", 502);

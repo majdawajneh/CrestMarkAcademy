@@ -162,10 +162,10 @@ export async function POST(request: NextRequest) {
   // Other backend errors
   // =====================================
 
-  if (!backend.ok) {
+  if (backend.status === 429) {
     return responseError(
-      "Unable to renew session.",
-      502
+      "Too many session renewal requests. Please try again later.",
+      429
     );
   }
 

@@ -4,10 +4,20 @@ import { Manrope, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { notFound } from "next/navigation";
 import "../globals.css";
 
-
 const locales = ["en", "ar"] as const;
 
 type Locale = (typeof locales)[number];
+
+type Props = {
+  children: React.ReactNode;
+  params: Promise<{
+    locale: string;
+  }>;
+};
+
+// ========================================
+// Fonts
+// ========================================
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -22,22 +32,47 @@ const arabicFont = IBM_Plex_Sans_Arabic({
   display: "swap",
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  "http://localhost:3000";
+// ========================================
+// Site URL
+// ========================================
 
-type Props = {
-  children: React.ReactNode;
-  params: Promise<{
-    locale: string;
-  }>;
-};
+function getSiteUrl(): URL | null {
+  const value = process.env.NEXT_PUBLIC_SITE_URL;
+
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      url.hostname === "localhost" ||
+      url.hostname.endsWith(".example.com")
+    ) {
+      return null;
+    }
+
+    return new URL(url.origin);
+  } catch {
+    return null;
+  }
+}
+
+// ========================================
+// Locales
+// ========================================
 
 export function generateStaticParams() {
   return locales.map((locale) => ({
     locale,
   }));
 }
+
+// ========================================
+// SEO Metadata
+// ========================================
 
 export async function generateMetadata({
   params,
@@ -49,39 +84,40 @@ export async function generateMetadata({
   }
 
   const isArabic = locale === "ar";
+  const siteUrl = getSiteUrl();
 
   const title = isArabic
-    ? "CrestMark | تعلّم، طوّر، وتقدّم"
-    : "CrestMark | Learn. Build. Advance.";
+    ? "CrestMark Academy | دورات برمجة وتكنولوجيا أونلاين"
+    : "CrestMark Academy | Online Programming & Technology Courses";
 
   const description = isArabic
-    ? "اكتشف دورات تعليمية عبر الإنترنت، وطوّر مهاراتك وابدأ رحلتك التعليمية مع CrestMark."
-    : "Discover online courses, build valuable skills, and advance your learning journey with CrestMark.";
+    ? "تعلّم البرمجة وتطوير الويب وقواعد البيانات عبر دورات عملية منظّمة في CrestMark. استكشف الدروس، تابع تقدمك، وطوّر مهاراتك خطوة بخطوة."
+    : "Learn programming, web development and databases with practical online courses. Follow structured lessons, track your progress and build new skills.";
 
   return {
-    metadataBase: new URL(siteUrl),
+    ...(siteUrl
+      ? {
+          metadataBase: siteUrl,
+        }
+      : {}),
 
-    applicationName: "CrestMark",
+    applicationName: "CrestMark Academy",
 
-    title,
+    title: {
+      default: title,
+      template: "%s | CrestMark Academy",
+    },
 
     description,
 
-    alternates: {
-      canonical: `/${locale}`,
-      languages: {
-        en: "/en",
-        ar: "/ar",
-        "x-default": "/en",
-      },
-    },
+    // Page-specific canonical and hreflang values
+    // belong in each public page's generateMetadata.
 
     openGraph: {
       type: "website",
-      siteName: "CrestMark",
+      siteName: "CrestMark Academy",
       title,
       description,
-      url: `/${locale}`,
       locale: isArabic ? "ar_JO" : "en_US",
       alternateLocale: isArabic
         ? ["en_US"]
@@ -93,8 +129,23 @@ export async function generateMetadata({
       title,
       description,
     },
+
+    // Do not request indexing while the official
+    // production URL is not configured.
+    ...(!siteUrl
+      ? {
+          robots: {
+            index: false,
+            follow: false,
+          },
+        }
+      : {}),
   };
 }
+
+// ========================================
+// Locale Root Layout
+// ========================================
 
 export default async function LocaleLayout({
   children,
@@ -106,7 +157,6 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  
   return (
     <html
       lang={locale}
@@ -116,5 +166,4 @@ export default async function LocaleLayout({
       <body>{children}</body>
     </html>
   );
-
 }

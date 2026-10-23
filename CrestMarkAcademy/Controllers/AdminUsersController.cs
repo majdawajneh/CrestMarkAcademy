@@ -121,5 +121,40 @@ namespace CrestMarkAcademy.Controllers.Admin
 
             return userId;
         }
+        // ========================================
+        // Create Instructor Account
+        // POST /api/admin/users/instructors
+        // ========================================
+
+        [HttpPost("instructors")]
+        public async Task<ActionResult<AdminUserDetailsDto>>
+            CreateInstructor([FromBody] CreateInstructorDto dto)
+        {
+            var instructor = await _adminUserService
+                .CreateInstructorAsync(dto);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = instructor.Id },
+                instructor
+            );
+        }
+
+        // ========================================
+        // Resend Instructor Invitation
+        // POST /api/admin/users/{id}/resend-invitation
+        // ========================================
+
+        [HttpPost("{id:int}/resend-invitation")]
+        public async Task<IActionResult> ResendInstructorInvitation(int id)
+        {
+            await _adminUserService
+                .ResendInstructorInvitationAsync(id);
+
+            return Ok(new
+            {
+                message = "Instructor invitation sent successfully."
+            });
+        }
     }
 }

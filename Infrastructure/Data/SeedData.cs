@@ -1,4 +1,5 @@
-﻿using Domain.Entities.Identity;
+﻿
+using Domain.Entities.Identity;
 using Infrastructure.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,8 @@ namespace Infrastructure.Data
                 string[] roleNames =
                 {
                     "Admin",
-                    "Student"
+                    "Student",
+                    "Instructor"
                 };
 
                 foreach (var roleName in roleNames)
@@ -46,7 +48,6 @@ namespace Infrastructure.Data
 
                 await context.SaveChangesAsync();
 
-
                 // =========================
                 // 2. Read Admin Settings
                 // =========================
@@ -54,15 +55,12 @@ namespace Infrastructure.Data
                 var adminEmail =
                     configuration["SeedAdmin:Email"]?
                         .Trim()
-                        .ToLower();
+                        .ToLowerInvariant();
 
                 var adminUsername =
                     configuration["SeedAdmin:Username"]?
                         .Trim()
-                        .ToLower();
-
-                var adminPassword =
-                    configuration["SeedAdmin:Password"];
+                        .ToLowerInvariant();
 
                 var adminFirstName =
                     configuration["SeedAdmin:FirstName"]?
@@ -76,10 +74,8 @@ namespace Infrastructure.Data
                     configuration["SeedAdmin:PhoneNumber"]?
                         .Trim();
 
-
                 if (string.IsNullOrWhiteSpace(adminEmail) ||
                     string.IsNullOrWhiteSpace(adminUsername) ||
-                    string.IsNullOrWhiteSpace(adminPassword) ||
                     string.IsNullOrWhiteSpace(adminFirstName) ||
                     string.IsNullOrWhiteSpace(adminLastName))
                 {
@@ -87,7 +83,6 @@ namespace Infrastructure.Data
                         "SeedAdmin configuration is incomplete."
                     );
                 }
-
 
                 // =========================
                 // 3. Find Existing Admin
@@ -97,7 +92,6 @@ namespace Infrastructure.Data
                     .FirstOrDefaultAsync(u =>
                         u.Email == adminEmail
                     );
-
 
                 // =========================
                 // 4. Check Username Conflict
@@ -109,21 +103,15 @@ namespace Infrastructure.Data
                     );
 
                 if (usernameOwner != null &&
-                    admin != null &&
-                    usernameOwner.Id != admin.Id)
+                    (admin == null ||
+                     usernameOwner.Id != admin.Id))
                 {
                     throw new InvalidOperationException(
                         "Seed admin username is already used by another user."
                     );
                 }
 
-                if (admin == null && usernameOwner != null)
-                {
-                    throw new InvalidOperationException(
-                        "Seed admin username is already used by another user."
-                    );
-                }
-
+                bool adminWasCreated = admin == null;
 
                 // =========================
                 // 5. Create Admin
@@ -131,20 +119,26 @@ namespace Infrastructure.Data
 
                 if (admin == null)
                 {
+                    var adminPassword =
+                        configuration["SeedAdmin:Password"];
+
+                    if (string.IsNullOrWhiteSpace(adminPassword))
+                    {
+                        throw new InvalidOperationException(
+                            "SeedAdmin password is required when creating the admin account."
+                        );
+                    }
+
                     admin = new User
                     {
                         FirstName = adminFirstName,
                         LastName = adminLastName,
-
                         Username = adminUsername,
                         Email = adminEmail,
-
                         IsActive = true,
                         EmailConfirmed = true,
-
                         CreatedAt = DateTime.UtcNow
                     };
-
 
                     admin.PasswordHash =
                         passwordHasher.HashPassword(
@@ -152,15 +146,32 @@ namespace Infrastructure.Data
                             adminPassword
                         );
 
-
                     await context.Users.AddAsync(admin);
-
                     await context.SaveChangesAsync();
                 }
 
+                // =========================
+                // 6. Verify Existing Admin
+                // =========================
+
+                var adminRole = await context.Roles
+                    .FirstAsync(r => r.Name == "Admin");
+
+                bool hasAdminRole = await context.UserRoles
+                    .AnyAsync(ur =>
+                        ur.UserId == admin.Id &&
+                        ur.RoleId == adminRole.Id
+                    );
+
+                if (!adminWasCreated && !hasAdminRole)
+                {
+                    throw new InvalidOperationException(
+                        "Existing seed admin account does not have the Admin role."
+                    );
+                }
 
                 // =========================
-                // 6. Ensure Admin Profile
+                // 7. Ensure Admin Profile
                 // =========================
 
                 bool profileExists =
@@ -171,40 +182,20 @@ namespace Infrastructure.Data
 
                 if (!profileExists)
                 {
-                    var profile = new UserProfile
-                    {
-                        UserId = admin.Id,
-                        PhoneNumber = adminPhone
-                    };
-
-                    await context.UserProfiles
-                        .AddAsync(profile);
+                    await context.UserProfiles.AddAsync(
+                        new UserProfile
+                        {
+                            UserId = admin.Id,
+                            PhoneNumber = adminPhone
+                        }
+                    );
                 }
 
-
                 // =========================
-                // 7. Get Admin Role
-                // =========================
-
-                var adminRole =
-                    await context.Roles
-                        .FirstAsync(r =>
-                            r.Name == "Admin"
-                        );
-
-
-                // =========================
-                // 8. Ensure Admin Role
+                // 8. Assign Role To New Admin
                 // =========================
 
-                bool hasAdminRole =
-                    await context.UserRoles
-                        .AnyAsync(ur =>
-                            ur.UserId == admin.Id &&
-                            ur.RoleId == adminRole.Id
-                        );
-
-                if (!hasAdminRole)
+                if (adminWasCreated)
                 {
                     await context.UserRoles.AddAsync(
                         new UserRole
@@ -215,19 +206,16 @@ namespace Infrastructure.Data
                     );
                 }
 
-
                 // =========================
                 // 9. Save Everything
                 // =========================
 
                 await context.SaveChangesAsync();
-
                 await transaction.CommitAsync();
             }
             catch
             {
                 await transaction.RollbackAsync();
-
                 throw;
             }
         }

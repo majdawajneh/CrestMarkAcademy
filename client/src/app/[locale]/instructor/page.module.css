@@ -1,0 +1,267 @@
+
+.page {
+  color: #102e50;
+}
+
+.heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 27px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: #246ed2;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.heading h2 {
+  margin: 0;
+  color: #102e50;
+  font-size: clamp(25px, 2.8vw, 33px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.heading p {
+  margin: 9px 0 0;
+  color: #73849a;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.refreshButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 10px 17px;
+  border: 1px solid #cedeed;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #194a80;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.refreshButton:hover:not(:disabled) {
+  border-color: #87b5e5;
+  background: #eef6ff;
+}
+
+.refreshButton:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric {
+  min-width: 0;
+  padding: 23px;
+  border: 1px solid #e1e9f2;
+  border-radius: 13px;
+  background: #ffffff;
+}
+
+.metricTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #657b93;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.metricTop small {
+  color: #a4b5c9;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.metric > strong {
+  display: block;
+  margin: 24px 0 13px;
+  color: #102e50;
+  font-size: clamp(30px, 3vw, 39px);
+  font-weight: 800;
+  letter-spacing: -0.06em;
+}
+
+.metricBottom {
+  min-height: 18px;
+  color: #42739d;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.performance {
+  padding: 28px;
+  border: 1px solid #e1e9f2;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.sectionHeading h3 {
+  margin: 0;
+  color: #102e50;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.sectionHeading p {
+  margin: 9px 0 0;
+  color: #73849a;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.performanceRows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 35px;
+  margin-top: 34px;
+  padding-bottom: 33px;
+  border-bottom: 1px solid #e9eff6;
+}
+
+.performanceRow {
+  min-width: 0;
+}
+
+.rowHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #536c85;
+}
+
+.rowHeading strong {
+  color: #102e50;
+  font-size: 15px;
+}
+
+.track {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #eaf1f8;
+}
+
+.track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #327ed1;
+}
+
+.performanceRow small {
+  display: block;
+  margin-top: 11px;
+  color: #8295a9;
+  font-size: 11px;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 28px;
+}
+
+.summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary span {
+  color: #73849a;
+  font-size: 12px;
+}
+
+.summary strong {
+  color: #163d63;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.updated {
+  margin-top: 18px;
+  color: #8799ac;
+  font-size: 11px;
+  text-align: end;
+}
+
+.error,
+.loading {
+  padding: 20px;
+  border: 1px solid #e1e9f2;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #526b85;
+  font-size: 13px;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 22px;
+  border-color: #f0d1d1;
+  color: #9e3c44;
+}
+
+.error button {
+  padding: 8px 13px;
+  border: 1px solid #e6b4bb;
+  border-radius: 7px;
+  background: #fff;
+  color: #9e3c44;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 1150px) {
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .metrics,
+  .performanceRows {
+    grid-template-columns: 1fr;
+  }
+
+  .metric,
+  .performance {
+    padding: 20px;
+  }
+
+  .summary {
+    gap: 12px;
+  }
+
+  .summary strong {
+    font-size: 20px;
+  }
+}
